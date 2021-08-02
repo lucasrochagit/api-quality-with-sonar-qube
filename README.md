@@ -345,7 +345,17 @@ export class AppModule {
 }
 ```
 
-Feitas as devidas pré configurações, podemos seguir para as implementações.
+Feitas as devidas pré configurações, podemos seguir para as implementações. Apenas uma entidade será tratada nessa API:
+a entidade `User`. Ela deverá conter os seguintes parâmetros:
+
+```ts
+interface User {
+    id: number;
+    name: string;
+    age: number;
+    job: string;
+}
+```
 
 ### 3.3.1 Camada de Infraestrutura
 
@@ -437,15 +447,15 @@ export class BaseRepository<Entity, IdType>
     }
 
     async create(item: Entity): Promise<Entity> {
-        return await this._repository.save(item);
+        return this._repository.save(item);
     }
 
     async find(): Promise<Entity[]> {
-        return await this._repository.find();
+        return this._repository.find();
     }
 
     async findById(id: IdType): Promise<Entity> {
-        return await this._repository.findOne(id);
+        return this._repository.findOne(id);
     }
 
     async update(id: IdType, item: Entity): Promise<Entity> {
@@ -464,6 +474,15 @@ export class BaseRepository<Entity, IdType>
 }
 ```
 
+Você pode se questionar o motivo pelo qual o método `update` não retorna o resultado direto da operação. É simples:
+no `Typeorm`, a operação de `update` não retorna uma `Entity`, mas um objeto do tipo `UpdateResult`. Como queremos que o
+repositório retorne uma `Entity`, se faz necessário aguardar a operação de atualização de dados e, caso seja bem
+sucedida, fazer uma busca pelo mesmo objeto, porém atualizado.
+
+Da mesma forma, no `Typeorm` a operação de `delete` retorna um objeto do tipo `DeleteResult`. Porém, para essa
+aplicação, como não me interessa saber se o objeto foi deletado ou não, apenas se faz necessário aguardar a operação e,
+caso a operação gere algum erro, o mesmo será lançado.
+
 Após isso, podemos implementar a classe `UserRepository`. Para isso, basta criar um arquivo no
 diretório `src/infrastructure/repository` denominado `user.repository.ts` . Ele deve estar configurado da seguinte
 forma:
@@ -478,35 +497,878 @@ import { IUserRepository } from './interface/user.repository.interface';
 
 @Injectable()
 export class UserRepository
-  extends BaseRepository<UserEntity, number>
-  implements IUserRepository
-{
-  constructor(
-    @InjectRepository(UserEntity)
-    protected readonly _repository: Repository<UserEntity>,
-  ) {
-    super(_repository);
-  }
+    extends BaseRepository<UserEntity, number>
+    implements IUserRepository {
+    constructor(
+        @InjectRepository(UserEntity)
+        protected readonly _repository: Repository<UserEntity>,
+    ) {
+        super(_repository);
+    }
 }
 ```
 
 Agora vamos implementar os testes da camada de infraestrutura.
 
-### 3.3.3 Camada de UI
-
-A princípio, apenas uma entidade será tratada nessa API: a entidade `User`. Ela deverá conter os seguintes parâmetros:
+O primeiro passo é criar um diretório onde serão criados os mocks dos objetos usados nos testes, no intuito de
+centralizar e organizar em uma classe por entidade. Para isso, vamos criar o diretório `mock` em `test`. Após isso, no
+diretório `test/mock`, vamos criar o arquivo `user.mock.ts`. Ele deve estar configurado da seguinte forma:
 
 ```ts
-interface User {
-    name: string;
-    age: number;
-    job: string;
+import { UserEntity } from '../../src/infrastructure/entity/user.entity';
+
+export class UserMock {
+    public static get entity(): UserEntity {
+        const entity: UserEntity = new UserEntity();
+        entity.id = 1;
+        entity.name = 'John Doe';
+        entity.age = 26;
+        entity.job = 'Developer';
+        return entity;
+    }
 }
 ```
+
+Agora vamos iniciar a implementação dos testes. Eu particularmente gosto de utilizar a biblioteca `sinon` para criar os
+mocks das dependências que são injetadas nas classes. Para usá-lo, utilize o comando `npm i -D sinon @types/sinon` para
+instalar a biblioteca como dependência de desenvolvimento.
+
+Podemos também definir um script para executar os testes de um contexto específico. Para isso, defina no
+objeto `scripts` do arquivo `package.json` a chave `test:match` com o valor `jest --coverage=false --`. Para usar esse
+comando é simples. Caso queira executar apenas os testes dos repositórios, execute o
+comando `npm run test:match controller`. Nesse caso, todos os testes que estiverem o nome `controller` serão executados.
+Você pode especificar o nome do arquivo, como `npm run test:match app.controller.spec`, e apenas os testes do
+arquivo `app.controller.spec` serão executados.
+
+Em seguida, vamos criar os diretórios onde serão criados os arquivos de testes. Vamos criar o diretório `infrastructure`
+em `test/unit` e, em seguida, criar o diretório `repository` em `test/unit/infrastructure`. Após isso, devemos criar o
+arquivo `user.repository.spec.ts`, que irá conter os testes unitários da classe `UserRepository`. A configuração inicial
+é a seguinte:
+
+```ts
+import { mock } from 'sinon';
+import { IUserRepository } from 'src/infrastructure/repository/interface/user.repository.interface';
+import { UserEntity } from '../../../../../src/infrastructure/entity/user.entity';
+import { UserRepository } from '../../../../../src/infrastructure/repository/user.repository';
+import { UserMock } from '../../../../mock/user.mock';
+
+describe('UserRepository', () => {
+    let userRepository: IUserRepository;
+    let typeOrmRepository: any;
+
+    beforeAll(() => {
+        typeOrmRepository = mock();
+        userRepository = new UserRepository(typeOrmRepository);
+    });
+});
+```
+
+Perceba que o `typeOrmRepository` como um mock, ou seja, possível definir e controlar os métodos que pertencem a essa
+classe e seus comportamentos. Em seguida, esse mock foi injetado no construtor do `userRepository`, como se fosse a
+injeção de dependência do próprio `Repository` do `Typeorm`. Após isso, vamos iniciar os testes de cada chamada
+do `userRepository`. Existem duas situações que são testadas aqui: uma chamada de sucesso e uma chamada de erro. Isso
+porque não existe nenhuma condicional durante a execução do fluxo do repositório além dessas: ou a ação é realizada, ou
+gera um erro. É possível que você possa testar as diversas situações de erro que podem ser geradas
+pelo `typOrmRepository`, mas esse não é o foco desse projeto em questão.
+
+Após a execução dos testes de cada método, você pode utilizar o comando `npm run test:match user.repository.spec` e
+verificar se os testes estão funcionando corretamente. Vamos iniciar testando a chamada do método `create()`:
+
+```ts
+import { mock } from 'sinon';
+import { IUserRepository } from 'src/infrastructure/repository/interface/user.repository.interface';
+import { UserEntity } from '../../../../../src/infrastructure/entity/user.entity';
+import { UserRepository } from '../../../../../src/infrastructure/repository/user.repository';
+import { UserMock } from '../../../../mock/user.mock';
+
+describe('UserRepository', () => {
+    let userRepository: IUserRepository;
+    let typeOrmRepository: any;
+
+    beforeAll(() => {
+        typeOrmRepository = mock();
+        userRepository = new UserRepository(typeOrmRepository);
+    });
+
+    describe('create()', () => {
+        describe('when create is successful', () => {
+            it('should return the created entity', async () => {
+                typeOrmRepository.save = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(UserMock.entity));
+                const result: UserEntity = await userRepository.create(UserMock.entity);
+                expect(result).toMatchObject(UserMock.entity);
+            });
+        });
+
+        describe('when an error is thrown', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.save = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    await userRepository.create(UserMock.entity);
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+    });
+});
+```
+
+Agora vamos testar o método `find()`:
+
+```ts
+import { mock } from 'sinon';
+import { IUserRepository } from 'src/infrastructure/repository/interface/user.repository.interface';
+import { UserEntity } from '../../../../../src/infrastructure/entity/user.entity';
+import { UserRepository } from '../../../../../src/infrastructure/repository/user.repository';
+import { UserMock } from '../../../../mock/user.mock';
+
+describe('UserRepository', () => {
+    let userRepository: IUserRepository;
+    let typeOrmRepository: any;
+
+    beforeAll(() => {
+        typeOrmRepository = mock();
+        userRepository = new UserRepository(typeOrmRepository);
+    });
+
+    describe('create()', () => {
+        describe('when create is successful', () => {
+            it('should return the created entity', async () => {
+                typeOrmRepository.save = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(UserMock.entity));
+                const result: UserEntity = await userRepository.create(UserMock.entity);
+                expect(result).toMatchObject(UserMock.entity);
+            });
+        });
+
+        describe('when an error is thrown', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.save = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    await userRepository.create(UserMock.entity);
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+    });
+
+    describe('find()', () => {
+        describe('when find is successful', () => {
+            it('should return the found entity list', async () => {
+                typeOrmRepository.find = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve([UserMock.entity]));
+                const result: UserEntity[] = await userRepository.find();
+                expect(result).toMatchObject([UserMock.entity]);
+            });
+        });
+
+        describe('when an error is thrown', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.find = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    await userRepository.create(UserMock.entity);
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+    });
+});
+```
+
+Agora vamos testar o método `findById()`:
+
+```ts
+import { mock } from 'sinon';
+import { IUserRepository } from 'src/infrastructure/repository/interface/user.repository.interface';
+import { UserEntity } from '../../../../../src/infrastructure/entity/user.entity';
+import { UserRepository } from '../../../../../src/infrastructure/repository/user.repository';
+import { UserMock } from '../../../../mock/user.mock';
+
+describe('UserRepository', () => {
+    let userRepository: IUserRepository;
+    let typeOrmRepository: any;
+
+    beforeAll(() => {
+        typeOrmRepository = mock();
+        userRepository = new UserRepository(typeOrmRepository);
+    });
+
+    describe('create()', () => {
+        describe('when create is successful', () => {
+            it('should return the created entity', async () => {
+                typeOrmRepository.save = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(UserMock.entity));
+                const result: UserEntity = await userRepository.create(UserMock.entity);
+                expect(result).toMatchObject(UserMock.entity);
+            });
+        });
+
+        describe('when an error is thrown', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.save = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    await userRepository.create(UserMock.entity);
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+    });
+
+    describe('find()', () => {
+        describe('when find is successful', () => {
+            it('should return the found entity list', async () => {
+                typeOrmRepository.find = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve([UserMock.entity]));
+                const result: UserEntity[] = await userRepository.find();
+                expect(result).toMatchObject([UserMock.entity]);
+            });
+        });
+
+        describe('when an error is thrown', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.find = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    await userRepository.create(UserMock.entity);
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+    });
+
+    describe('findById()', () => {
+        describe('when findById is successful', () => {
+            it('should return the found entity', async () => {
+                typeOrmRepository.findOne = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(UserMock.entity));
+                const result: UserEntity = await userRepository.findById(
+                    UserMock.entity.id,
+                );
+                expect(result).toMatchObject(UserMock.entity);
+            });
+        });
+
+        describe('when an error is thrown', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.findOne = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    await userRepository.findById(UserMock.entity.id);
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+    });
+});
+```
+
+Agora vamos testar o método `update()`. No caso do update, existe uma peculiaridade: no `BaseRepository`, o
+método `update()` realiza duas operações: uma atualização e uma busca pelo objeto atualizado. Nesse caso, devemos testar
+as duas possíveis situações de erro:
+
+```ts
+import { mock } from 'sinon';
+import { IUserRepository } from 'src/infrastructure/repository/interface/user.repository.interface';
+import { UserEntity } from '../../../../../src/infrastructure/entity/user.entity';
+import { UserRepository } from '../../../../../src/infrastructure/repository/user.repository';
+import { UserMock } from '../../../../mock/user.mock';
+
+describe('UserRepository', () => {
+    let userRepository: IUserRepository;
+    let typeOrmRepository: any;
+
+    beforeAll(() => {
+        typeOrmRepository = mock();
+        userRepository = new UserRepository(typeOrmRepository);
+    });
+
+    describe('create()', () => {
+        describe('when create is successful', () => {
+            it('should return the created entity', async () => {
+                typeOrmRepository.save = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(UserMock.entity));
+                const result: UserEntity = await userRepository.create(UserMock.entity);
+                expect(result).toMatchObject(UserMock.entity);
+            });
+        });
+
+        describe('when an error is thrown', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.save = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    await userRepository.create(UserMock.entity);
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+    });
+
+    describe('find()', () => {
+        describe('when find is successful', () => {
+            it('should return the found entity list', async () => {
+                typeOrmRepository.find = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve([UserMock.entity]));
+                const result: UserEntity[] = await userRepository.find();
+                expect(result).toMatchObject([UserMock.entity]);
+            });
+        });
+
+        describe('when an error is thrown', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.find = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    await userRepository.create(UserMock.entity);
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+    });
+
+    describe('findById()', () => {
+        describe('when findById is successful', () => {
+            it('should return the found entity', async () => {
+                typeOrmRepository.findOne = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(UserMock.entity));
+                const result: UserEntity = await userRepository.findById(
+                    UserMock.entity.id,
+                );
+                expect(result).toMatchObject(UserMock.entity);
+            });
+        });
+
+        describe('when an error is thrown', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.findOne = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    await userRepository.findById(UserMock.entity.id);
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+    });
+
+    describe('update()', () => {
+        describe('when update is successful', () => {
+            it('should return the updated entity', async () => {
+                typeOrmRepository.update = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(UserMock.entity));
+                typeOrmRepository.findOne = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(UserMock.entity));
+                const result: UserEntity = await userRepository.update(
+                    UserMock.entity.id,
+                    UserMock.entity,
+                );
+                expect(result).toMatchObject(UserMock.entity);
+            });
+        });
+
+        describe('when an error is thrown at update', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.update = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    await userRepository.update(UserMock.entity.id, UserMock.entity);
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+
+        describe('when an error is thrown at findOne', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.update = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(UserMock.entity));
+                typeOrmRepository.findOne = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    const result: UserEntity = await userRepository.findById(
+                        UserMock.entity.id,
+                    );
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+    });
+});
+```
+
+Agora vamos testar o método `delete()`:
+
+```ts
+import { mock } from 'sinon';
+import { IUserRepository } from 'src/infrastructure/repository/interface/user.repository.interface';
+import { UserEntity } from '../../../../../src/infrastructure/entity/user.entity';
+import { UserRepository } from '../../../../../src/infrastructure/repository/user.repository';
+import { UserMock } from '../../../../mock/user.mock';
+
+describe('UserRepository', () => {
+    let userRepository: IUserRepository;
+    let typeOrmRepository: any;
+
+    beforeAll(() => {
+        typeOrmRepository = mock();
+        userRepository = new UserRepository(typeOrmRepository);
+    });
+
+    describe('create()', () => {
+        describe('when create is successful', () => {
+            it('should return the created entity', async () => {
+                typeOrmRepository.save = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(UserMock.entity));
+                const result: UserEntity = await userRepository.create(UserMock.entity);
+                expect(result).toMatchObject(UserMock.entity);
+            });
+        });
+
+        describe('when an error is thrown', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.save = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    await userRepository.create(UserMock.entity);
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+    });
+
+    describe('find()', () => {
+        describe('when find is successful', () => {
+            it('should return the found entity list', async () => {
+                typeOrmRepository.find = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve([UserMock.entity]));
+                const result: UserEntity[] = await userRepository.find();
+                expect(result).toMatchObject([UserMock.entity]);
+            });
+        });
+
+        describe('when an error is thrown', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.find = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    await userRepository.create(UserMock.entity);
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+    });
+
+    describe('findById()', () => {
+        describe('when findById is successful', () => {
+            it('should return the found entity', async () => {
+                typeOrmRepository.findOne = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(UserMock.entity));
+                const result: UserEntity = await userRepository.findById(
+                    UserMock.entity.id,
+                );
+                expect(result).toMatchObject(UserMock.entity);
+            });
+        });
+
+        describe('when an error is thrown', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.findOne = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    await userRepository.findById(UserMock.entity.id);
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+    });
+
+    describe('update()', () => {
+        describe('when update is successful', () => {
+            it('should return the updated entity', async () => {
+                typeOrmRepository.update = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(UserMock.entity));
+                typeOrmRepository.findOne = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(UserMock.entity));
+                const result: UserEntity = await userRepository.update(
+                    UserMock.entity.id,
+                    UserMock.entity,
+                );
+                expect(result).toMatchObject(UserMock.entity);
+            });
+        });
+
+        describe('when an error is thrown at update', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.update = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    await userRepository.update(UserMock.entity.id, UserMock.entity);
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+
+        describe('when an error is thrown at findOne', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.update = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(UserMock.entity));
+                typeOrmRepository.findOne = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    const result: UserEntity = await userRepository.findById(
+                        UserMock.entity.id,
+                    );
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+    });
+
+    describe('delete()', () => {
+        describe('when delete is successful', () => {
+            it('should return anything', async () => {
+                typeOrmRepository.delete = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(UserMock.entity));
+                await userRepository.delete(UserMock.entity.id);
+            });
+        });
+
+        describe('when an error is thrown', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.delete = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    await userRepository.delete(UserMock.entity.id);
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+    });
+});
+```
+
+Por fim, vamos testar o método `checkExists()`. O checkExists pode retornar `true` ou `false`, para indicar se o usuário
+existe ou não. Nesse caso, devemos testar essas situações também:
+
+```ts
+import { mock } from 'sinon';
+import { IUserRepository } from 'src/infrastructure/repository/interface/user.repository.interface';
+import { UserEntity } from '../../../../../src/infrastructure/entity/user.entity';
+import { UserRepository } from '../../../../../src/infrastructure/repository/user.repository';
+import { UserMock } from '../../../../mock/user.mock';
+
+describe('UserRepository', () => {
+    let userRepository: IUserRepository;
+    let typeOrmRepository: any;
+
+    beforeAll(() => {
+        typeOrmRepository = mock();
+        userRepository = new UserRepository(typeOrmRepository);
+    });
+
+    describe('create()', () => {
+        describe('when create is successful', () => {
+            it('should return the created entity', async () => {
+                typeOrmRepository.save = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(UserMock.entity));
+                const result: UserEntity = await userRepository.create(UserMock.entity);
+                expect(result).toMatchObject(UserMock.entity);
+            });
+        });
+
+        describe('when an error is thrown', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.save = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    await userRepository.create(UserMock.entity);
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+    });
+
+    describe('find()', () => {
+        describe('when find is successful', () => {
+            it('should return the found entity list', async () => {
+                typeOrmRepository.find = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve([UserMock.entity]));
+                const result: UserEntity[] = await userRepository.find();
+                expect(result).toMatchObject([UserMock.entity]);
+            });
+        });
+
+        describe('when an error is thrown', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.find = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    await userRepository.create(UserMock.entity);
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+    });
+
+    describe('findById()', () => {
+        describe('when findById is successful', () => {
+            it('should return the found entity', async () => {
+                typeOrmRepository.findOne = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(UserMock.entity));
+                const result: UserEntity = await userRepository.findById(
+                    UserMock.entity.id,
+                );
+                expect(result).toMatchObject(UserMock.entity);
+            });
+        });
+
+        describe('when an error is thrown', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.findOne = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    await userRepository.findById(UserMock.entity.id);
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+    });
+
+    describe('update()', () => {
+        describe('when update is successful', () => {
+            it('should return the updated entity', async () => {
+                typeOrmRepository.update = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(UserMock.entity));
+                typeOrmRepository.findOne = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(UserMock.entity));
+                const result: UserEntity = await userRepository.update(
+                    UserMock.entity.id,
+                    UserMock.entity,
+                );
+                expect(result).toMatchObject(UserMock.entity);
+            });
+        });
+
+        describe('when an error is thrown at update', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.update = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    await userRepository.update(UserMock.entity.id, UserMock.entity);
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+
+        describe('when an error is thrown at findOne', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.update = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(UserMock.entity));
+                typeOrmRepository.findOne = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    await userRepository.findById(UserMock.entity.id);
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+    });
+
+    describe('delete()', () => {
+        describe('when delete is successful', () => {
+            it('should return anything', async () => {
+                typeOrmRepository.delete = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(UserMock.entity));
+                await userRepository.delete(UserMock.entity.id);
+            });
+        });
+
+        describe('when an error is thrown', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.delete = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    await userRepository.delete(UserMock.entity.id);
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+    });
+
+    describe('checkExists()', () => {
+        describe('when checkExists is successful', () => {
+            it('should return true if entity exists', async () => {
+                typeOrmRepository.findOne = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(UserMock.entity));
+                const result: boolean = await userRepository.checkExists({
+                    id: UserMock.entity.id,
+                });
+                expect(result).toEqual(true);
+            });
+            it('should return false if entity does not exists', async () => {
+                typeOrmRepository.findOne = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve(undefined));
+                const result: boolean = await userRepository.checkExists({
+                    id: UserMock.entity.id,
+                });
+                expect(result).toEqual(false);
+            });
+        });
+
+        describe('when an error is thrown', () => {
+            it('should throw the error', async () => {
+                typeOrmRepository.findOne = jest
+                    .fn()
+                    .mockImplementation(() =>
+                        Promise.reject({ message: 'Database error' }),
+                    );
+                try {
+                    await userRepository.checkExists({ id: UserMock.entity.id });
+                } catch (error) {
+                    expect(error).toHaveProperty('message', 'Database error');
+                }
+            });
+        });
+    });
+});
+
+```
+
+Após implementar todos os testes, e assegurar que os mesmos estão funcionando corretamente e com uma cobertura
+aceitável, vamos realizar um novo escaneamento do nosso projeto e atualizar o relatório do `SonarQube`. Certifique-se de
+que o `SonarQube` está rodando na sua máquina local. Em seguida, na raiz do projeto, execute o comando `sonar-scanner`.
+O resultado deverá ser semelhante a esse:
+
+![sonar_scanner_infrastructure](images/sonar_scanner_infrastructure.png)
+
+### 3.3.3 Camada de UI
 
 Antes de começarmos as implementações, devemos criar o `UserModule`, módulo que deverá conter todas as configurações
 referentes à entidade `User`. Para isso, basta criar um arquivo no diretório `src/ui/module` denominado `user.module.ts`
 . Ele deve estar configurado da seguinte forma:
+
 
 ```ts
 import { Module } from '@nestjs/common';

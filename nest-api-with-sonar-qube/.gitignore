@@ -40,3 +40,6 @@ sonar-project.properties
 
 # Environment 
 .env
+
+# Database
+.database

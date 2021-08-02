@@ -7,15 +7,15 @@ export class BaseRepository<Entity, IdType>
   protected constructor(protected readonly _repository: Repository<Entity>) {}
 
   async create(item: Entity): Promise<Entity> {
-    return await this._repository.save(item);
+    return this._repository.save(item);
   }
 
   async find(): Promise<Entity[]> {
-    return await this._repository.find();
+    return this._repository.find();
   }
 
   async findById(id: IdType): Promise<Entity> {
-    return await this._repository.findOne(id);
+    return this._repository.findOne(id);
   }
 
   async update(id: IdType, item: Entity): Promise<Entity> {

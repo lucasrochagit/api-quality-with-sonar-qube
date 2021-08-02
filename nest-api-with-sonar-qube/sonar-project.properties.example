@@ -1,0 +1,26 @@
+# must be unique in a given SonarQube instance
+sonar.projectKey=nest-api-with-sonar-qube
+
+# defaults to project key
+sonar.projectName=nest-api-with-sonar-qube
+
+# the sources that should be analyzed
+sonar.sources=src
+
+# the sources or files that should not be analyzed
+sonar.exclusions=.eslintrc.js,src/main.ts
+
+# the sonar host url 
+sonar.host.url=http://localhost:9000
+
+# your user token
+sonar.login=
+
+# version of project
+sonar.projectVersion=1.0
+ 
+# encoding of the source code
+sonar.sourceEncoding=UTF-8
+
+# specify the file that contains the coverage info
+sonar.javascript.lcov.reportPaths=coverage/lcov.info

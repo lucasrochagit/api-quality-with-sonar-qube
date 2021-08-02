@@ -535,10 +535,10 @@ instalar a biblioteca como dependência de desenvolvimento.
 
 Podemos também definir um script para executar os testes de um contexto específico. Para isso, defina no
 objeto `scripts` do arquivo `package.json` a chave `test:match` com o valor `jest --coverage=false --`. Para usar esse
-comando é simples. Caso queira executar apenas os testes dos repositórios, execute o
-comando `npm run test:match controller`. Nesse caso, todos os testes que estiverem o nome `controller` serão executados.
-Você pode especificar o nome do arquivo, como `npm run test:match app.controller.spec`, e apenas os testes do
-arquivo `app.controller.spec` serão executados.
+comando é simples. Caso queira executar apenas os testes dos controllers, execute o
+comando `npm run test:match controller.spec`. Nesse caso, todos os arquivos de testes que contém `controller.spec` serão
+executados. Você pode especificar também o nome completo do arquivo, como `npm run test:match app.controller.spec`, e
+apenas os testes do arquivo `app.controller.spec` serão executados.
 
 Em seguida, vamos criar os diretórios onde serão criados os arquivos de testes. Vamos criar o diretório `infrastructure`
 em `test/unit` e, em seguida, criar o diretório `repository` em `test/unit/infrastructure`. Após isso, devemos criar o
@@ -619,7 +619,13 @@ describe('UserRepository', () => {
 });
 ```
 
-Agora vamos testar o método `find()`:
+Agora vamos testar o método `find()`. Em particular, existem dosi casos de situações de sucesso que devem ser testadas e
+validadas:
+
+1. Se existirem usuários, o método deve retornar um array de usuários.
+2. Se não existirem usuários, o repositório deve retornar um array vazio.
+
+Logo, temos:
 
 ```ts
 import { mock } from 'sinon';
@@ -666,12 +672,19 @@ describe('UserRepository', () => {
 
     describe('find()', () => {
         describe('when find is successful', () => {
-            it('should return the found entity list', async () => {
+            it('should return the found entity list when there are entities', async () => {
                 typeOrmRepository.find = jest
                     .fn()
                     .mockImplementation(() => Promise.resolve([UserMock.entity]));
                 const result: UserEntity[] = await userRepository.find();
                 expect(result).toMatchObject([UserMock.entity]);
+            });
+            it('should return an empty entity list when there are no entities', async () => {
+                typeOrmRepository.find = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve([]));
+                const result: UserEntity[] = await userRepository.find();
+                expect(result).toMatchObject([]);
             });
         });
 
@@ -740,12 +753,19 @@ describe('UserRepository', () => {
 
     describe('find()', () => {
         describe('when find is successful', () => {
-            it('should return the found entity list', async () => {
+            it('should return the found entity list when there are entities', async () => {
                 typeOrmRepository.find = jest
                     .fn()
                     .mockImplementation(() => Promise.resolve([UserMock.entity]));
                 const result: UserEntity[] = await userRepository.find();
                 expect(result).toMatchObject([UserMock.entity]);
+            });
+            it('should return an empty entity list when there are no entities', async () => {
+                typeOrmRepository.find = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve([]));
+                const result: UserEntity[] = await userRepository.find();
+                expect(result).toMatchObject([]);
             });
         });
 
@@ -845,12 +865,19 @@ describe('UserRepository', () => {
 
     describe('find()', () => {
         describe('when find is successful', () => {
-            it('should return the found entity list', async () => {
+            it('should return the found entity list when there are entities', async () => {
                 typeOrmRepository.find = jest
                     .fn()
                     .mockImplementation(() => Promise.resolve([UserMock.entity]));
                 const result: UserEntity[] = await userRepository.find();
                 expect(result).toMatchObject([UserMock.entity]);
+            });
+            it('should return an empty entity list when there are no entities', async () => {
+                typeOrmRepository.find = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve([]));
+                const result: UserEntity[] = await userRepository.find();
+                expect(result).toMatchObject([]);
             });
         });
 
@@ -1001,12 +1028,19 @@ describe('UserRepository', () => {
 
     describe('find()', () => {
         describe('when find is successful', () => {
-            it('should return the found entity list', async () => {
+            it('should return the found entity list when there are entities', async () => {
                 typeOrmRepository.find = jest
                     .fn()
                     .mockImplementation(() => Promise.resolve([UserMock.entity]));
                 const result: UserEntity[] = await userRepository.find();
                 expect(result).toMatchObject([UserMock.entity]);
+            });
+            it('should return an empty entity list when there are no entities', async () => {
+                typeOrmRepository.find = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve([]));
+                const result: UserEntity[] = await userRepository.find();
+                expect(result).toMatchObject([]);
             });
         });
 
@@ -1184,12 +1218,19 @@ describe('UserRepository', () => {
 
     describe('find()', () => {
         describe('when find is successful', () => {
-            it('should return the found entity list', async () => {
+            it('should return the found entity list when there are entities', async () => {
                 typeOrmRepository.find = jest
                     .fn()
                     .mockImplementation(() => Promise.resolve([UserMock.entity]));
                 const result: UserEntity[] = await userRepository.find();
                 expect(result).toMatchObject([UserMock.entity]);
+            });
+            it('should return an empty entity list when there are no entities', async () => {
+                typeOrmRepository.find = jest
+                    .fn()
+                    .mockImplementation(() => Promise.resolve([]));
+                const result: UserEntity[] = await userRepository.find();
+                expect(result).toMatchObject([]);
             });
         });
 
@@ -1368,7 +1409,6 @@ O resultado deverá ser semelhante a esse:
 Antes de começarmos as implementações, devemos criar o `UserModule`, módulo que deverá conter todas as configurações
 referentes à entidade `User`. Para isso, basta criar um arquivo no diretório `src/ui/module` denominado `user.module.ts`
 . Ele deve estar configurado da seguinte forma:
-
 
 ```ts
 import { Module } from '@nestjs/common';

@@ -42,12 +42,19 @@ describe('UserRepository', () => {
 
   describe('find()', () => {
     describe('when find is successful', () => {
-      it('should return the found entity list', async () => {
+      it('should return the found entity list when there are entities', async () => {
         typeOrmRepository.find = jest
           .fn()
           .mockImplementation(() => Promise.resolve([UserMock.entity]));
         const result: UserEntity[] = await userRepository.find();
         expect(result).toMatchObject([UserMock.entity]);
+      });
+      it('should return an empty entity list when there are no entities', async () => {
+        typeOrmRepository.find = jest
+          .fn()
+          .mockImplementation(() => Promise.resolve([]));
+        const result: UserEntity[] = await userRepository.find();
+        expect(result).toMatchObject([]);
       });
     });
 

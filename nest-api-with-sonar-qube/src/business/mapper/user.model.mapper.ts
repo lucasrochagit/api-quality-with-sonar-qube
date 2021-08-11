@@ -1,7 +1,7 @@
-import { UserModel } from '../model/user.model';
-import { Injectable } from '@nestjs/common';
-import { UserEntity } from '../../infrastructure/entity/user.entity';
-import { IUserModelMapper } from './interface/user.model.mapper.interface';
+import { Injectable } from '@nestjs/common'
+import { UserEntity } from '../../infrastructure/entity/user.entity'
+import { UserModel } from '../model/user.model'
+import { IUserModelMapper } from './interface/user.model.mapper.interface'
 
 @Injectable()
 export class UserModelMapper implements IUserModelMapper {

@@ -32,12 +32,15 @@ describe('UserService', () => {
         userRepository.create = jest
           .fn()
           .mockImplementation(() =>
-            Promise.reject({ message: 'Repository error' }),
+            Promise.reject({ message: 'Sensitive repository error' }),
           );
         try {
           await userService.create(UserMock.model);
         } catch (err) {
-          expect(err).toHaveProperty('message', 'Repository error');
+          expect(err).toHaveProperty(
+            'message',
+            'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+          );
         }
       });
     });
@@ -68,12 +71,15 @@ describe('UserService', () => {
         userRepository.find = jest
           .fn()
           .mockImplementation(() =>
-            Promise.reject({ message: 'Repository error' }),
+            Promise.reject({ message: 'Sensitive repository error' }),
           );
         try {
           await userService.find();
         } catch (err) {
-          expect(err).toHaveProperty('message', 'Repository error');
+          expect(err).toHaveProperty(
+            'message',
+            'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+          );
         }
       });
     });
@@ -115,13 +121,16 @@ describe('UserService', () => {
         userRepository.checkExists = jest
           .fn()
           .mockImplementation(() =>
-            Promise.reject({ message: 'Repository error' }),
+            Promise.reject({ message: 'Sensitive repository error' }),
           );
 
         try {
           await userService.findById(UserMock.model.id);
         } catch (err) {
-          expect(err).toHaveProperty('message', 'Repository error');
+          expect(err).toHaveProperty(
+            'message',
+            'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+          );
         }
       });
     });
@@ -166,13 +175,16 @@ describe('UserService', () => {
         userRepository.checkExists = jest
           .fn()
           .mockImplementation(() =>
-            Promise.reject({ message: 'Repository error' }),
+            Promise.reject({ message: 'Sensitive repository error' }),
           );
 
         try {
           await userService.update(UserMock.model.id, UserMock.model);
         } catch (err) {
-          expect(err).toHaveProperty('message', 'Repository error');
+          expect(err).toHaveProperty(
+            'message',
+            'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+          );
         }
       });
     });
@@ -193,12 +205,15 @@ describe('UserService', () => {
         userRepository.delete = jest
           .fn()
           .mockImplementation(() =>
-            Promise.reject({ message: 'Repository error' }),
+            Promise.reject({ message: 'Sensitive repository error' }),
           );
         try {
           await userService.delete(UserMock.entity.id);
-        } catch (error) {
-          expect(error).toHaveProperty('message', 'Repository error');
+        } catch (err) {
+          expect(err).toHaveProperty(
+            'message',
+            'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+          );
         }
       });
     });

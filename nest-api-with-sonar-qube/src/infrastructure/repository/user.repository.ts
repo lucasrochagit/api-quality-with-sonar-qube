@@ -12,7 +12,7 @@ export class UserRepository
 {
   constructor(
     @InjectRepository(UserEntity)
-    protected readonly _repository: Repository<UserEntity>,
+    readonly _repository: Repository<UserEntity>,
   ) {
     super(_repository);
   }

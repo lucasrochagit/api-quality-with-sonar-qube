@@ -1,10 +1,10 @@
 import { IRepository } from '../interface/repository.interface';
-import { Repository } from 'typeorm';
+import { FindConditions, Repository } from 'typeorm';
 
 export class BaseRepository<Entity, IdType>
   implements IRepository<Entity, IdType>
 {
-  protected constructor(protected readonly _repository: Repository<Entity>) {}
+  protected constructor(readonly _repository: Repository<Entity>) {}
 
   async create(item: Entity): Promise<Entity> {
     return this._repository.save(item);
@@ -19,15 +19,14 @@ export class BaseRepository<Entity, IdType>
   }
 
   async update(id: IdType, item: Entity): Promise<Entity> {
-    await this._repository.update(id, item);
-    return this.findById(id);
+    return this._repository.save({ id, ...item });
   }
 
   async delete(id: IdType): Promise<void> {
     await this._repository.delete(id);
   }
 
-  async checkExists(params: any): Promise<boolean> {
+  async checkExists(params: FindConditions<Entity>): Promise<boolean> {
     const result: Entity = await this._repository.findOne(params);
     return !!result;
   }

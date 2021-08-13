@@ -17,7 +17,7 @@ describe('UserService', () => {
 
   describe('create()', () => {
     describe('when create is successful', () => {
-      it('should return the created model', async () => {
+      it('should return the created user', async () => {
         userRepository.create = jest
           .fn()
           .mockImplementation(() => Promise.resolve(UserMock.entity));
@@ -48,7 +48,7 @@ describe('UserService', () => {
 
   describe('find()', () => {
     describe('when find is successful', () => {
-      it('should return the found model list when there are models', async () => {
+      it('should return the found model list when there are users', async () => {
         userRepository.find = jest
           .fn()
           .mockImplementation(() => Promise.resolve([UserMock.entity]));
@@ -56,7 +56,7 @@ describe('UserService', () => {
         const result: UserModel[] = await userService.find();
         expect(result).toMatchObject([UserMock.model]);
       });
-      it('should return an empty model list when there are no models', async () => {
+      it('should return an empty model list when there are no users', async () => {
         userRepository.find = jest
           .fn()
           .mockImplementation(() => Promise.resolve([]));
@@ -87,7 +87,7 @@ describe('UserService', () => {
 
   describe('findById()', () => {
     describe('when findById is successful', () => {
-      it('should return the found entity', async () => {
+      it('should return the found user', async () => {
         userRepository.checkExists = jest
           .fn()
           .mockImplementation(() => Promise.resolve(true));
@@ -138,7 +138,7 @@ describe('UserService', () => {
 
   describe('update()', () => {
     describe('when update is successful', () => {
-      it('should return the found entity', async () => {
+      it('should return the found user', async () => {
         userRepository.checkExists = jest
           .fn()
           .mockImplementation(() => Promise.resolve(true));
@@ -153,8 +153,8 @@ describe('UserService', () => {
       });
     });
 
-    describe('when the model is not found', () => {
-      it('should throw the error for model not founded', async () => {
+    describe('when the user is not found', () => {
+      it('should throw the error for user not founded', async () => {
         userRepository.checkExists = jest
           .fn()
           .mockImplementation(() => Promise.resolve(false));

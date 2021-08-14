@@ -1973,3 +1973,30 @@ O resultado deverá ser como esse:
 
 ![sonar_scanner_ui](images/sonar_scanner_ui.png)
 
+#### 3.3.4 Testes End-to-End
+
+Partindo para os testes `e2e`, vamos simular requisições feitas via HTTP Request, como se fôssemos os clientes da API.
+
+[comment]: <> (Em implementações robustas, que utilizam bancos de dados como MySQL, SQL Server ou MongoDB, você possui duas opções:)
+
+[comment]: <> (1. Ter um banco só para testes, e executar o caminho completo, com inserção/busca/atualização/deleção de dados no banco.)
+
+[comment]: <> (2. Simular o retorno de todas as chamadas que são feitas ao banco de dados através de um `spy`.)
+
+[comment]: <> (Para esse projeto, irei optar pela segunda alternativa, até porque no dia a dia nem sempre temos a disponibilidade de)
+
+[comment]: <> (ter um banco só para testes.)
+
+Para implementar os testes `e2e`, vamos utilizar a implementação utilizada em `app.e2e.spec.ts`, localizado
+em `test/e2e`, porém para o contexto de usuário.
+
+```ts
+
+```
+
+Após isso, vamos iniciar os testes das requisições de `User`, criando o arquivo `user.e2e.spec.ts` em `test/e2e` e
+implementar os testes. Ele deve estar configurado da seguinte forma:
+
+```ts
+
+```

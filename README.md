@@ -1,64 +1,71 @@
-# Asesegurando a qualidade do código de sua API com SonarQube
+# Valide a qualidade de sua API utilizando o SonarQube.
 
 ## @beforeAll
 
 Antes de tudo, quero reiterar que esse é um documento opinativo, baseado nas minhas experiências com a utilização da
-ferramenta SonarQube. É possível que, após a escrita desse documento, o meu ponto de vista sobre essa ferramenta mude e
+ferramenta `SonarQube`. É possível que, após a escrita desse documento, o meu ponto de vista sobre essa ferramenta mude e
 evolua. Também não me considero um mestre do uso da ferramenta aqui apresentada, e talvez a minha pouca experiência gere
 algumas opiniões que sejam equivocadas ou incompletas. Portanto, conto com o seu feedback construtivo para que eu possa
 continuar a evoluir profissionalmente com o uso dessas ferramentas.
 
 ## 1. Introdução
 
-O SonarQube é uma ferramenta que serve para fazer a varredura completa do seu código, gerando um relatório de erros,
-falhas, vulnerabilidades, entre outros pontos. Além disso, caso seu projeto tenha testes, ele avalia a cobertura dos
-testes do seu código. [MELHORAR DESCRIÇÃO]
+O `SonarQube` é uma ferramenta que serve para avaliar a qualidade do código durante o desenvolvimento. Em síntese, é
+realizada a varredura completa do código, gerando um relatório que aponta possíveis erros, falhas, vulnerabilidades,
+código duplicado, código muito complexo, entre outros pontos. Além disso, caso o projeto tenha testes, o `SonarQube`
+avalia a cobertura dos testes do código, informando quantas ou quais linhas e condições foram ou não testadas.
 
-// TODO <br/>
-É possível validar a qualidade do código escrito em…
+Atualmente, o `SonarQube v9.0.1` dá suporte a 27 linguagens de programação, entre elas, as mais utilizadas no mercado de
+trabalho: Java, C#, C, C++, Javascript, Typescript, Python, Go, Swift, PHP, Kotlin, Ruby, entre outras. Ou seja, boa
+parte dos códigos produzidos hoje — incluindo provavelmente os códigos que você produz —, podem ser analisados
+pelo `SonarQube`.
 
-Nesse documento irei desenvolver uma API simples do zero com testes, semelhante à API desenvolvida no projeto que falo
-sobre [documentação swagger com annotation vs arquivo](https://github.com/lucasrochagit/swagger-annotation-vs-yaml),
-para ilustrar o processo de evolução e avaliação contínua da qualidade do código de uma API com o SonarQube.
+Nesse documento irei desenvolver uma API simples do zero com testes, para ilustrar o processo de avaliação contínua da
+qualidade do código de uma API com o `SonarQube` conforme ela vai sendo desenvolvida.
 
 ## 2. Configurando o SonarQube e o SonarScanner
 
+Esse projeto será desenvolvido em uma máquina `Windows`, logo as instruções descritas serão focadas nesse sistema
+operacional. Porém, o Sonar tem uma documentação bem simples e didática de ser compreendida, caso você use `Linux` ou
+`MacOS`.
+
 Caso queira reproduzir o desenvolvimento da API, vai ser necessário:
 
-1. Uma IDE favorita (vou usar o [Visual Studio Code](https://code.visualstudio.com/) para esse projeto);
+1. Uma IDE (vou usar o [Visual Studio Code](https://code.visualstudio.com/) para esse projeto);
 2. O [NodeJS](https://nodejs.org/en/) instalado na sua máquina;
 3. O [NestJS](https://nestjs.com/) instalado como biblioteca global do NodeJS;
 
-Para usar o SonarQube, vai ser necessário:
+Para usar o `SonarQube`, vai ser necessário:
 
 1. A versão 11 ou superior do [Java JDK](https://www.oracle.com/br/java/technologies/javase-jdk11-downloads.html);
 2. Baixar o [SonarQube Community](https://www.sonarqube.org/downloads/) (versão usada nesse projeto: 9.0.1);
 3. Baixar o [SonarScanner](https://docs.sonarqube.org/latest/analysis/scan/sonarscanner/) (versão usada nesse projeto:
    4.6.2);
 
-// TODO <br/>
-O SonarQube é o [...]
+O `SonarQube Community` é a versão OpenSource da ferramenta propriamente dita. É através dessa ferramenta que você vai
+poder visualizar o resultado da validação feita no seu código.
 
-Já o SonarScanner é a ferramenta que vai permitir que o seu projeto seja escaneado e validado, e o relatório gerado vai
-para o SonarQube. [MELHORAR DESCRIÇÃO]
+Já o `SonarScanner` é a ferramenta que vai permitir que o seu projeto seja escaneado e validado, enviando o relatório
+gerado do escaneamento para o `SonarQube`.
 
-Segundo as recomendações de instalação da própria plataforma, o SonarQube e o SonarScanner devem ser descompactados na
-raiz do disco C. Exemplo:
+Segundo as recomendações de instalação da própria plataforma, o `SonarQube` e o `SonarScanner` devem ser descompactados
+na raiz do disco C. Exemplo:
 
 ```
 C:\SonarQube
 C:\SonarScanner
 ```
 
-Recomendo que descompacte os arquivos compactos na raiz do disco C e depois renomeie os diretórios conforme acima.
+Caso queira seguir à risca as recomendações aqui descritas, descompacte os arquivos compactos na raiz do disco C e
+depois renomeie os diretórios conforme ilustrado no exemplo acima.
 
 Em seguida, adicione às variáveis de ambiente (de preferência, as variáveis de ambiente de usuário) os seguintes
 endereços:
 
-- `C:\SonarQube\bin\windows-x86-64` — Para iniciar o SonarQube de qualquer lugar via terminal, com o
+- `C:\SonarQube\bin\windows-x86-64` — Para iniciar o `SonarQube` de qualquer lugar via terminal, com o
   comando `StartSonar` ou `StartSonar.bat`.
 - `C:\SonarScanner\bin` — Para rodar o SonarScanner em qualquer projeto utilizando o comando `sonar-scanner [opts]` ou
-  `sonar-scanner.bat [opts]`
+  `sonar-scanner.bat [opts]` na raiz do mesmo.
 
 ## 3. Mãos à obra
 
@@ -66,8 +73,9 @@ endereços:
 
 ### 3.1.1 Iniciando o projeto
 
-Vamos utilizar o comando `nest new nest-api-with-sonar-qube` no terminal para criar o projeto. Será criado um projeto
-com a seguinte estrutura:
+Escolha um diretório qualquer para iniciar o seu projeto. Abra o terminal no diretório escolhido e execute o
+comando `nest new nest-api-with-sonar-qube` para criar o projeto Nest padrão. Após isso, abra o projeto com o VSCode.
+Você irá perceber o projeto foi criado com a seguinte estrutura:
 
 ```html
 src/
@@ -81,12 +89,12 @@ test/
     jest-e2e.json
 ```
 
-Após isso, vamos abrir o projeto com o VSCode e realizar as seguintes ações.
+Após isso, vamos realizar as seguintes ações:
 
 1. Remover o arquivo `jest-e2e.json` do diretório `test`.
 2. Renomear o arquivo `app-e2e.json` para `app.e2e.spec.ts`, mantendo o padrão `dot.case` no nome dos arquivos.
 
-Logo após, vamos reorganizar o projeto da seguinte forma:
+Logo após, vamos reestruturar o projeto da seguinte forma:
 
 ```html
 src/
@@ -119,8 +127,8 @@ Onde:
 
 Depois, é necessário redefinir alguns valores no arquivo `package.json`:
 
-- No objeto `scripts`, altere o valor de `test:e2e` para `jest -- test/e2e`.
-- No objeto `jest`,  altere o valor de `rootDir` para `./`.
+- No objeto `scripts`, altere o valor de `test:e2e` para `jest --coverage=false -- test/e2e`.
+- No objeto `jest`, altere o valor de `rootDir` para `./`.
 - No objeto `jest`, altere o valor de `collectCoverageFrom` para `src/**/*.(t|j)s`.
 - No objeto `jest`, altere o valor de `coverageDirectory` para `coverage`.
 
@@ -128,8 +136,8 @@ Em seguida, adicione os seguintes valores no `package.json`:
 
 - No objeto `jest`, adicione a chave `collectCoverage` com o valor `true`, para o coverage dos testes seja mensurado por
   padrão.
-- No objeto `jest`, adicione a chave `verbose` com o valor `true`, para que seja mostrada uma lista de cada teste 
-  executado em cada arquivo de testes (`describe` e `it`).
+- No objeto `jest`, adicione a chave `verbose` com o valor `true`, para ser exibida uma lista com as mensagens de cada
+  teste executado em cada arquivo de testes (`describe` e `it`).
 - No objeto `jest`, adicione no array `collectCoverageFrom` o valor `!src/main.(t|j)s`, para que o arquivo `main` seja
   ignorado na cobertura de testes.
 - No objeto `script`, adicione a chave `test:unit` com o valor `jest --coverage=false -- test/unit`. Vai ser útil para
@@ -150,15 +158,17 @@ Por fim, execute o comando `npm run test:e2e`. O resultado no terminal deve ser 
 
 ### 3.1.2 Configurando o Sonar
 
-Primeiro, vamos configurar o SonarQube para manter o rastreio do projeto localmente. Para isso, execute o SonarQube
+Primeiro, vamos configurar o `SonarQube` para manter o rastreio do projeto localmente. Para isso, execute o SonarQube
 localmente, abrindo uma instância do terminal e executando o comando `StartSonar` ou `StartSonar.bat`. O Sonar irá ser
 carregado e, ao fim do carregamento, acesse no navegador o endereço `http://localhost:9000`. Você será redirecionado
 para a tela de login.
 
 ![login_sonar_qube](images/login_sonar_qube.png)
 
-Para efetuar o login, use as credenciais `login: admin` e `senha: admin`. Você será redirecionado para a página inicial
-do SonarQube.
+Para efetuar o login, use as credenciais padrão `login: admin` e `senha: admin`. É possível que após o primeiro login,
+o Sonar solicite a alteração da senha padrão. Caso isso aconteça, altere a senha antes de prosseguir.
+
+Ao realizar a alteração de senha, você será redirecionado para a página inicial do `SonarQube`.
 
 ![sonar_dashboard](images/sonar_dashboard.png)
 
@@ -181,13 +191,13 @@ executar o `SonarScanner`.
 
 ![provide_sonar_project_token](images/provide_sonar_project_token.png)
 
-Você pode colocar qualquer coisa. Para facilitar, irei utilizar o meu usuário do github `lucasrochagit`. Clique em
-`Generate`, e depois clique em `Continue`. Após isso, selecione o `build` do seu projeto.
+Você pode colocar qualquer dado que quiser. Para facilitar, irei utilizar o meu usuário do github `lucasrochagit`.
+Clique em `Generate`, e depois clique em `Continue`. Após isso, selecione o `build` do seu projeto.
 
 ![select_project_build](images/select_project_build.png)
 
 Selecione a opção `Other(for JS, TS, Go, Python, PHP, ...)`, que é o nosso caso. Após isso, selecione o seu sistema
-operacional (no meu caso, `Windows`)
+operacional (nesse caso, `Windows`)
 
 ![select_os_windows](images/select_os_windows.png)
 
@@ -228,7 +238,7 @@ sonar.javascript.lcov.reportPaths=coverage/lcov.info
 
 Preencha o parâmetro `sonar.login` com o token que foi gerado no passo anterior.
 
-### 3.2 Executando nossa primeira avaliação
+### 3.2 Executando nosso primeiro scan
 
 Vamos avaliar o nosso código no sonar. Para isso, abra o terminal na raiz do projeto e execute o comando `sonar-scanner`
 . Esse processo geralmente é um pouco demorado, portanto, seja paciente.
@@ -244,10 +254,11 @@ arquivo `.gitignore` da API as seguintes linhas:
 sonar-project.properties
 ```
 
-Caso queira subir um arquivo de exemplo, para que futuramente você ou outras pessoas possam utilizar o `sonar-scanner`
-no seu projeto, crie um arquivo chamado `sonar-scanner.properties.example` e adicione os parâmetros supracitados.
-Lembre-se de nunca subir para o seu repositório chaves privadas ou conteúdos restritos, logo, deixe o
-parâmetro `sonar.login` em branco.
+Isso irá evitar que o diretório contendo arquivos gerados durante o escaneamento na raiz do projeto seja commitados
+futuramente, bem como o seu arquivo de configurações do sonar. Caso queira subir um arquivo de exemplo, para que
+futuramente você ou outras pessoas possam utilizar o `sonar-scanner` no seu projeto, crie um arquivo
+chamado `sonar-scanner.properties.example` e adicione os parâmetros supracitados. Lembre-se de nunca subir para o seu
+repositório chaves privadas ou conteúdos restritos, logo, deixe o parâmetro `sonar.login` em branco.
 
 Voltando ao `sonar-scanner`, quando o escaneamento do projeto for concluído, você irá verificar a seguinte mensagem no
 terminal:
@@ -264,8 +275,9 @@ então nosso código está com a cobertura esperada e sem duplicações ou bad s
 
 ### 3.3 Implementando o projeto
 
-Antes de prosseguir a implementação, vamos implementar algumas bibliotecas e realizar algumas configurações. Para isso,
-iremos executar o comando:
+Nesse projeto, a abordagem será implementar cada camada da aplicação, e ao fim da implementação, desenvolver os testes
+relacionados à camada desenvolvida. Antes de prosseguir a implementação, vamos instalar algumas bibliotecas e realizar
+algumas configurações. Para isso, em um terminal na raiz do projeto, iremos executar o comando:
 
 `npm i --save @nestjs/config @nestjs/typeorm typeorm sqlite3 class-validator class-transformer`
 
@@ -280,7 +292,8 @@ Onde:
 - `class-transformer`: biblioteca que serve para fazer a serialização/deserialização de uma objeto ou uma classe para
   outra classe (será utilizado mais na frente, na implementação da camada `ui`).
 
-Após instalar as bibliotecas, crie um arquivo chamado `.env` na raiz do projeto. Adicione os seguintes parâmetros:
+Após instalar as bibliotecas, vamos criar um arquivo chamado `.env` na raiz do projeto e adicionar os seguintes
+parâmetros:
 
 ```text
 # PORT
@@ -298,10 +311,10 @@ Lembre de adicionar o arquivo `.env` no `.gitignore`. Você pode adicionar da se
 
 Considerando que o arquivo `.env` vai ser requerido para o funcionamento correto do sistema, crie também um
 arquivo `.env.example` na raiz do projeto, para que futuramente você ou quem for usar o projeto possa ter uma ideia do
-comportamento das variáveis de ambiente. Não esqueça de criar o `.env.example` com valores de exemplo, não envie com os
-valores do arquivo `.env`.
+comportamento das variáveis de ambiente. Lembre-se de não enviar os valores do `env.example` com informações sensíveis
+que forem definidas no arquivo `.env`.
 
-No arquivo `main.ts`, adicione as configurações de validação. Ele deve estar configurado da seguinte forma:
+No arquivo `main.ts`, vamos adicionar as configurações de validação. Ele deve estar configurado da seguinte forma:
 
 ```ts
 import { ValidationPipe } from '@nestjs/common';
@@ -316,10 +329,11 @@ async function bootstrap() {
 }
 
 bootstrap();
+
 ```
 
-Agora, configure o Typeorm e o módulo de leitura de variáveis de ambiente no arquivo `app.module.ts`. Ele deve estar
-configurado da seguinte forma:
+Agora, vamos configurar o Typeorm e o módulo de leitura de variáveis de ambiente no arquivo `app.module.ts`. Ele deve
+estar configurado da seguinte forma:
 
 ```ts
 import { Module } from '@nestjs/common';
@@ -332,8 +346,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     imports: [
         ConfigModule.forRoot(), // config used to load environment variables
         TypeOrmModule.forRoot({
-            type: 'sqlite', // type of database used on typeorm
-            database: '.database/nest-api-with-sonar-qube.db', // database path
+            type: 'sqlite', // name of database used
+            database: '.database/nest-api-with-sonar-qube.db', // database path (only for sqlite)
             autoLoadEntities: true, // load all entities defined in another modules
             synchronize: true, // sync tables with entity definitions automatically (for dev purposes)
         }),
@@ -341,8 +355,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     controllers: [AppController],
     providers: [AppService],
 })
-export class AppModule {
-}
+export class AppModule {}
+
 ```
 
 Feitas as devidas pré configurações, podemos seguir para as implementações. Apenas uma entidade será tratada nessa API:
@@ -375,8 +389,8 @@ Onde:
 - `entity`: irá conter as entidades da base de dados.
 - `repository`: irá conter as implementações dos repositórios e de suas interfaces;
 
-Vamos criar então a classe `UserEntity`. Para isso, basta criar um arquivo no diretório `src/infrastructure/entity`
-denominado `user.entity.ts` . Ele deve estar configurado da seguinte forma:
+Vamos criar então a classe `UserEntity`. Para isso, vamos criar criar um arquivo no
+diretório `src/infrastructure/entity` denominado `user.entity.ts` . Ele deve estar configurado da seguinte forma:
 
 ```ts
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
@@ -395,14 +409,14 @@ export class UserEntity {
     @Column()
     job: string;
 }
+
 ```
 
-Criada a entidade `UserEntity`, vamos partir para a criação do repositório. De antemão, devemos criar a interface do
-repositório da entidade em questão. Eu gosto de criar uma interface genérica, que contém todos os métodos comuns aos
-repositórios, que são as operações CRUD, e assim as demais interfaces dos repositórios podem estender a interface
-genérica, simplificando a implementação. Portanto, em `src/infrastructure/repository` devemos criar
-diretório `interface`. Em `src/infrastructure/repository/interface`, devemos criar o arquivo `repository.interface.ts`
-. Ele deve estar configurado da seguinte forma:
+Criada a entidade `UserEntity`, vamos partir para a criação do repositório. Eu gosto de criar uma interface genérica,
+que contém todos os métodos comuns aos repositórios — as operações CRUD —, e assim as demais interfaces dos
+repositórios podem estender a interface genérica, simplificando a implementação. Portanto,
+em `src/infrastructure/repository` vamos criar diretório `interface`. Em `src/infrastructure/repository/interface`,
+vamos criar o arquivo `repository.interface.ts`. Ele deve estar configurado da seguinte forma:
 
 ```ts
 export interface IRepository<Entity, IdType> {
@@ -418,22 +432,23 @@ export interface IRepository<Entity, IdType> {
 
     checkExists(params: any): Promise<boolean>;
 }
+
 ```
 
 Em seguida, devemos criar a interface `IUserRepository`. Para isso, basta criar o arquivo `user.repository.interface.ts`
-, no mesmo diretório do arquivo `repository.interface`. Ele deve estar configurado da seguinte forma:
+no mesmo diretório do arquivo `repository.interface`. Ele deve estar configurado da seguinte forma:
 
 ```ts
 import { UserEntity } from '../../entity/user.entity';
 import { IRepository } from './repository.interface';
 
-export interface IUserRepository extends IRepository<UserEntity, number> {
-}
+export interface IUserRepository extends IRepository<UserEntity, number> {}
+
 ```
 
-Seguindo a linha da interface genérica, eu gosto de criar uma classe, denominada `BaseRepository`. Essa classe deverá
-conter todos os métodos comuns aos repositórios, implementando a interface `IRepository` criada anteriormente. Portanto,
-no diretório `src/infrastructure/repository` devemos criar um diretório chamado `base` e, no
+Seguindo a linha da interface genérica, eu gosto de criar um repositório-base genérico, chamado `BaseRepository`. Esse
+repositório contém todas as chamadas do `IRepository`, porém é implementado de forma a ser utilizado para qualquer
+entidade da API. Portanto, no diretório `src/infrastructure/repository` devemos criar um diretório chamado `base` e, no
 diretório `src/infrastructure/repository/base`, criamos o arquivo `base.repository.ts`. Ele deve estar configurado da
 seguinte forma:
 
@@ -459,7 +474,7 @@ export class BaseRepository<Entity, IdType>
     }
 
     async update(id: IdType, item: Entity): Promise<Entity> {
-        return this._repository.save({ id, ...item});
+        return this._repository.save({ id, ...item });
     }
 
     async delete(id: IdType): Promise<void> {
@@ -471,23 +486,32 @@ export class BaseRepository<Entity, IdType>
         return !!result;
     }
 }
+
 ```
 
 Você pode se questionar o motivo pelo qual o método `update` e o método `create` chamam o mesmo método do repositório,
 denominado `save`. No Typeorm existe o método `update` no repositório, que permite que você atualize uma entidade
 passando o identificador da entidade (ex: `id`) e o corpo do objeto a ser atualizado. Porém, esse método não permite a
 atualização parcial do objeto, ou seja, você só precisa enviar todos os parâmetros mesmo que alguns não sejam
-atualizados. Já o método `save`, caso o objeto a ser salvo seja encontrado através do parâmetro de identificação, os
-demais parâmetros serão atualizados, caso contrário, um novo objeto será criado, e ainda possui a vantagem da
-atualização parcial. Além disso, utilizar o `update` não retorna uma entidade genérica, mas um objeto
-denominado `UpdateResult`. Quando a atualização é bem sucedida, o objeto atualizado é retornado dentro de um array em
-uma propriedade denominada `raw` e, visualmente, não fica tão bacana. Portanto, além de permitir atualização parcial,
-utilizar o `save` deixa o código bem mais bonito. Contudo, lembre-se de assegurar que o objeto atualizado exista, para
-que a atualização seja bem sucedida.
+atualizados. 
 
-Já na operação de `delete`, o repositório do `Typeorm` retorna um objeto do tipo `DeleteResult`. Porém, para essa
-aplicação, como não me interessa saber se o objeto foi deletado ou não, apenas se faz necessário aguardar a operação e,
-caso a chamada ao repositório gere algum erro, o mesmo seja lançado.
+Já com o método `save`, caso o objeto a ser salvo seja encontrado através do parâmetro de identificação, os demais
+parâmetros serão atualizados e, caso contrário, um novo objeto será criado. Além disso, utilizar o `save`, possui a
+vantagem da atualização parcial, ou seja, você pode enviar apenas o identificador da entidade e `1..todos` parâmetros a
+serem atualizados.
+
+Outro motivo para utilizar o `save` no lugar do `update` é que a chamada do `update` não retorna uma entidade genérica,
+mas um objeto denominado `UpdateResult`. Quando a atualização é bem sucedida, o objeto atualizado é retornado em um
+array em uma propriedade denominada `raw`.
+
+Por fim, além de permitir atualização parcial, utilizar o `save` é
+uma [recomendação do próprio typeorm](https://typeorm.io/#/undefined/updating-in-the-database). Contudo, lembre-se de
+assegurar que o objeto atualizado exista através do identificador informado, para que a atualização seja bem sucedida e
+não haja o risco de gerar dados duplicados no banco.
+
+A operação de `delete`, por sua vez, retorna um objeto do tipo `DeleteResult`. Porém, para essa aplicação, como não me
+interessa saber se o objeto foi deletado ou não, apenas se faz necessário aguardar a operação e, caso a chamada ao
+repositório gere algum erro, o mesmo seja lançado.
 
 Após isso, podemos implementar a classe `UserRepository`. Para isso, basta criar um arquivo no
 diretório `src/infrastructure/repository` denominado `user.repository.ts` . Ele deve estar configurado da seguinte
@@ -512,6 +536,7 @@ export class UserRepository
         super(_repository);
     }
 }
+
 ```
 
 Agora vamos implementar os testes da camada de infraestrutura.
@@ -533,18 +558,15 @@ export class UserMock {
         return entity;
     }
 }
+
 ```
 
-Agora vamos iniciar a implementação dos testes. Eu particularmente gosto de utilizar a biblioteca `sinon` para criar os
-mocks das dependências que são injetadas nas classes. Para usá-lo, utilize o comando `npm i -D sinon @types/sinon` para
-instalar a biblioteca como dependência de desenvolvimento.
-
-Podemos também definir um script para executar os testes de um contexto específico. Para isso, defina no
-objeto `scripts` do arquivo `package.json` a chave `test:match` com o valor `jest --coverage=false --`. Para usar esse
-comando é simples. Caso queira executar apenas os testes dos controllers, execute o
-comando `npm run test:match controller.spec`. Nesse caso, todos os arquivos de testes que contém `controller.spec` serão
-executados. Você pode especificar também o nome completo do arquivo, como `npm run test:match app.controller.spec`, e
-apenas os testes do arquivo `app.controller.spec` serão executados.
+Agora vamos iniciar a implementação dos testes. Podemos definir um script para executar os testes de um contexto
+específico. Para isso, podemos definir no objeto `scripts` do arquivo `package.json` a chave `test:match` com o
+valor `jest --coverage=false --`. Para usar esse comando é simples. Caso queira executar apenas os testes dos
+controllers, execute o comando `npm run test:match controller.spec`. Nesse caso, todos os arquivos de testes que
+possuem `controller.spec` no nome serão executados. Você pode especificar também o nome completo do arquivo,
+como `npm run test:match app.controller.spec`, e apenas os testes do arquivo `app.controller.spec` serão executados.
 
 Em seguida, vamos criar os diretórios onde serão criados os arquivos de testes. Vamos criar o diretório `infrastructure`
 em `test/unit` e, em seguida, criar o diretório `repository` em `test/unit/infrastructure`. Nesse diretório, devemos
@@ -552,32 +574,28 @@ criar o arquivo `user.repository.spec.ts`, que irá conter os testes unitários 
 inicial é a seguinte:
 
 ```ts
-import { mock } from 'sinon';
-import { UserEntity } from '../../../src/infrastructure/entity/user.entity';
-import { UserRepository } from '../../../src/infrastructure/repository/user.repository';
-import { UserMock } from '../../mock/user.mock';
+import { Repository } from 'typeorm'
+import { UserEntity } from '../../../src/infrastructure/entity/user.entity'
+import { UserRepository } from '../../../src/infrastructure/repository/user.repository'
 
 describe('UserRepository', () => {
-    let userRepository: UserRepository;
-    let typeOrmRepository: any;
-  
-    beforeAll(() => {
-      typeOrmRepository = mock();
-      userRepository = new UserRepository(typeOrmRepository);
-    });
+  let userRepository: UserRepository;
+  let typeOrmRepository: Repository<UserEntity>;
+
+  beforeAll(() => {
+    typeOrmRepository = new Repository<UserEntity>();
+    userRepository = new UserRepository(typeOrmRepository);
+  });
 });
+
 ```
 
-Perceba que o `typeOrmRepository` como um mock, ou seja, possível definir e controlar os métodos que pertencem a essa
-classe e seus comportamentos. Em seguida, esse mock foi injetado no construtor do `userRepository`, como se fosse a
-injeção de dependência do próprio `Repository` do `Typeorm`. Após isso, vamos iniciar os testes de cada chamada
-do `userRepository`. Existem duas situações que são testadas aqui: uma chamada de sucesso e uma chamada de erro. Isso
-porque não existe nenhuma condicional durante a execução do fluxo do repositório além dessas: ou a ação é realizada, ou
-gera um erro. É possível que você possa testar as diversas situações de erro que podem ser geradas
-pelo `typOrmRepository`, mas esse não é o foco desse projeto em questão.
+Existem duas situações que serão testadas para as chamadas do repositório: uma chamada de sucesso e uma chamada de erro.
+Isso porque não existe nenhuma condicional durante a execução do fluxo dos métodos do repositório além dessas: ou a ação
+é realizada com sucesso, ou gera um erro. Sinta-se livre para testar as diversas situações de erro que podem ser geradas
+pelo `typOrmRepository`, mas esse não é o foco desse projeto em questão. 
 
-Após a execução dos testes de cada método, você pode utilizar o comando `npm run test:match user.repository.spec` e
-verificar se os testes estão funcionando corretamente. Essas serão as situações testadas para cada método:
+Essas serão as situações testadas para cada método:
 
 - `create()`: o método `create()` possui o retorno de sucesso o retorno de erro.
 - `find()`: o método `find()` possui duas situações de sucesso além do retorno de erro. Caso existam usuários, o método
@@ -591,17 +609,17 @@ verificar se os testes estão funcionando corretamente. Essas serão as situaç�
 Dadas as situações, os testes devem ser implementados da seguinte forma:
 
 ```ts
-import { mock } from 'sinon';
-import { UserEntity } from '../../../../src/infrastructure/entity/user.entity';
-import { UserRepository } from '../../../../src/infrastructure/repository/user.repository';
-import { UserMock } from '../../../mock/user.mock';
+import { Repository } from 'typeorm'
+import { UserEntity } from '../../../src/infrastructure/entity/user.entity'
+import { UserRepository } from '../../../src/infrastructure/repository/user.repository'
+import { UserMock } from '../../mock/user.mock'
 
 describe('UserRepository', () => {
   let userRepository: UserRepository;
-  let typeOrmRepository: any;
+  let typeOrmRepository: Repository<UserEntity>;
 
   beforeAll(() => {
-    typeOrmRepository = mock();
+    typeOrmRepository = new Repository<UserEntity>();
     userRepository = new UserRepository(typeOrmRepository);
   });
 
@@ -789,12 +807,16 @@ describe('UserRepository', () => {
     });
   });
 });
+
 ```
 
+Você pode utilizar o comando `npm run test:match user.repository.spec` e verificar se os testes estão funcionando
+corretamente.
+
 Após implementar todos os testes, e assegurar que os mesmos estão funcionando corretamente e com uma cobertura
-aceitável, vamos realizar um novo escaneamento do nosso projeto e atualizar o relatório do `SonarQube`. Certifique-se de
-que o `SonarQube` está rodando na sua máquina local. Em seguida, na raiz do projeto, execute o comando `sonar-scanner`.
-O resultado deverá ser como esse:
+aceitável (`npm run test:cov`), vamos realizar um novo escaneamento do nosso projeto e atualizar o relatório
+do `SonarQube`. Certifique-se de que o `SonarQube` está rodando na sua máquina local. Em seguida, em um terminal na raiz
+do projeto, execute o comando `sonar-scanner`. O resultado deverá ser como esse:
 
 ![sonar_scanner_infrastructure](images/sonar_scanner_infrastructure.png)
 
@@ -805,6 +827,7 @@ Agora vamos implementar a camada de negócio. Essa camada deverá ter os seguint
 ```html
 src/
     business/
+        exception/
         mapper/
         model/
         service/
@@ -814,6 +837,7 @@ src/
 
 Onde:
 
+- `exception`: irá conter a(s) exceção(ões) da camada de negócio.
 - `mapper`: irá conter a implementação dos mapeadores e suas interfaces, que irão transformar `models` em `entities` e
   vice-versa.
 - `model`: irá conter a implementação dos modelos de dados da camada de negócio.
@@ -861,6 +885,7 @@ export class UserModel {
         this._job = value;
     }
 }
+
 ```
 
 Criado o modelo `UserModel`, vamos partir para a implementação do mapeador. Seguindo a estratégia de criar interfaces
@@ -873,6 +898,7 @@ export interface IModelMapper<Model, Entity> {
 
     deserialize(item: Model): Entity;
 }
+
 ```
 
 Em seguida, vamos criar a interface do mapeador do `UserModel`. Para isso, no diretório `src/business/mapper/interface`,
@@ -883,8 +909,8 @@ import { UserEntity } from '../../../infrastructure/entity/user.entity';
 import { UserModel } from '../../model/user.model';
 import { IModelMapper } from './model.mapper.interface';
 
-export interface IUserModelMapper extends IModelMapper<UserModel, UserEntity> {
-}
+export interface IUserModelMapper extends IModelMapper<UserModel, UserEntity> {}
+
 ```
 
 Logo após, vamos criar a classe mapeadora. No diretório `src/business/mapper`, vamos criar o arquivo `user.model.mapper`
@@ -915,12 +941,13 @@ export class UserModelMapper implements IUserModelMapper {
         return result;
     }
 }
+
 ```
 
 Finalizada a implementação do mapeador, vamos partir para a implementação do serviço. Assim como o `mapper` e
-o `repository`, também é interessante definir as interfaces de serviços. Seguindo a linha de interface genérica, crie o
-diretório  `interface` em `src/business/service` e, messe diretório, crie o arquivo `service.interface.ts`. Ele deverá
-estar configurado da seguinte forma:
+o `repository`, também é interessante definir as interfaces de serviços. Seguindo a linha de interface genérica, vamos
+criar o diretório  `interface` em `src/business/service` e, messe diretório, vamos criar o
+arquivo `service.interface.ts`. Ele deverá estar configurado da seguinte forma:
 
 ```ts
 export interface IService<Model> {
@@ -934,109 +961,123 @@ export interface IService<Model> {
 
     delete(id: number): Promise<void>;
 }
+
 ```
 
-Em seguida, no diretório `src/business/service/interface`, crie o arquivo `user.service.interface.ts`. Ele deverá estar
-configurado da seguinte forma:
+Em seguida, no diretório `src/business/service/interface`, vamos criar o arquivo `user.service.interface.ts`. Ele deverá
+estar configurado da seguinte forma:
 
 ```ts
 import { UserModel } from '../../model/user.model';
 import { IService } from './service.interface';
 
-export interface IUserService extends IService<UserModel> {
-}
+export interface IUserService extends IService<UserModel> {}
+
 ```
 
-Por fim, no diretório `src/business/service`, crie o arquivo `user.service.ts`. Ele deve estar configurado da seguinte
-forma:
+Antes de criar o serviço, vamos criar uma exceção genérica, que deve ser lançada sempre que houver um erro interno na
+camada de infraestrutura (ex.: base de dados indisponível). Essa exceção servirá para informar que houve um erro interno
+na aplicação, sem precisar especificá-lo. Isso evita que sejam retornadas informações sensíveis da base de dados para a
+camada de `interface` e, consequentemente, para o cliente. Para isso, vamos criar o diretório `exception` em `business`.
+Em seguida, dentro de `src/business/exception`, vamos criar o arquivo `service.error.exception.ts`. Ele deve estar 
+configurado da seguinte forma:
+
+```ts
+import { InternalServerErrorException } from '@nestjs/common';
+
+export class ServiceErrorException extends InternalServerErrorException {
+  constructor(operation: string) {
+    super(
+      `Due to an internal error, the operation '${operation}' could not be performed at this time. Please try again later.`,
+    );
+  }
+}
+
+```
+
+Por fim, no diretório `src/business/service`, vamos criar o arquivo `user.service.ts`. Ele deve estar configurado da
+seguinte forma:
 
 ```ts
 import {
-    Injectable,
-    InternalServerErrorException,
-    NotFoundException,
-} from '@nestjs/common';
-import { UserEntity } from '../../infrastructure/entity/user.entity';
-import { UserRepository } from '../../infrastructure/repository/user.repository';
-import { UserModelMapper } from '../mapper/user.model.mapper';
-import { UserModel } from '../model/user.model';
-import { IUserService } from './interface/user.service.interface';
+  Injectable, NotFoundException
+} from '@nestjs/common'
+import { UserEntity } from '../../infrastructure/entity/user.entity'
+import { UserRepository } from '../../infrastructure/repository/user.repository'
+import { ServiceErrorException } from '../exception/service.error.exception'
+import { UserModelMapper } from '../mapper/user.model.mapper'
+import { UserModel } from '../model/user.model'
+import { IUserService } from './interface/user.service.interface'
 
 @Injectable()
 export class UserService implements IUserService {
-    constructor(
-        private readonly _repository: UserRepository,
-        private readonly _mapper: UserModelMapper,
-    ) {
-    }
+  constructor(
+          private readonly _repository: UserRepository,
+          private readonly _mapper: UserModelMapper,
+  ) {}
 
-    async create(item: UserModel): Promise<UserModel> {
-        try {
-            const entity: UserEntity = this._mapper.deserialize(item);
-            const result: UserEntity = await this._repository.create(entity);
-            return this._mapper.serialize(result);
-        } catch (err) {
-            throw this.getInternalServerErrorException();
-        }
+  async create(item: UserModel): Promise<UserModel> {
+    try {
+      const entity: UserEntity = this._mapper.deserialize(item);
+      const result: UserEntity = await this._repository.create(entity);
+      return this._mapper.serialize(result);
+    } catch (err) {
+      throw new ServiceErrorException('create');
     }
+  }
 
-    async find(): Promise<UserModel[]> {
-        try {
-            const result: UserEntity[] = await this._repository.find();
-            return result.map((item: UserEntity) => this._mapper.serialize(item));
-        } catch (err) {
-            throw this.getInternalServerErrorException();
-        }
+  async find(): Promise<UserModel[]> {
+    try {
+      const result: UserEntity[] = await this._repository.find();
+      return result.map((item: UserEntity) => this._mapper.serialize(item));
+    } catch (err) {
+      throw new ServiceErrorException('find');
     }
+  }
 
-    async findById(id: number): Promise<UserModel> {
-        try {
-            await this.checkIfExistsById(id);
-            const result: UserEntity = await this._repository.findById(id);
-            return this._mapper.serialize(result);
-        } catch (err) {
-            if (err instanceof NotFoundException) {
-                throw err;
-            }
-            throw this.getInternalServerErrorException();
-        }
+  async findById(id: number): Promise<UserModel> {
+    try {
+      await this.checkIfExistsById(id);
+      const result: UserEntity = await this._repository.findById(id);
+      return this._mapper.serialize(result);
+    } catch (err) {
+      if (err instanceof NotFoundException) {
+        throw err;
+      }
+      throw new ServiceErrorException('findById');
     }
+  }
 
-    async update(id: number, item: UserModel): Promise<UserModel> {
-        try {
-            await this.checkIfExistsById(id);
-            const entity: UserEntity = this._mapper.deserialize(item);
-            const result: UserEntity = await this._repository.update(id, entity);
-            return this._mapper.serialize(result);
-        } catch (err) {
-            if (err instanceof NotFoundException) {
-                throw err;
-            }
-            throw this.getInternalServerErrorException();
-        }
+  async update(id: number, item: UserModel): Promise<UserModel> {
+    try {
+      await this.checkIfExistsById(id);
+      const entity: UserEntity = this._mapper.deserialize(item);
+      const result: UserEntity = await this._repository.update(id, entity);
+      return this._mapper.serialize(result);
+    } catch (err) {
+      if (err instanceof NotFoundException) {
+        throw err;
+      }
+      throw new ServiceErrorException('update');
     }
+  }
 
-    async delete(id: number): Promise<void> {
-        try {
-            await this._repository.delete(id);
-        } catch (err) {
-            throw this.getInternalServerErrorException();
-        }
+  async delete(id: number): Promise<void> {
+    try {
+      await this._repository.delete(id);
+    } catch (err) {
+      throw new ServiceErrorException('delete');
     }
+  }
 
-    private async checkIfExistsById(id: number): Promise<void> {
-        const exists = await this._repository.checkExists({ id });
-        if (!exists) {
-            throw new NotFoundException('User not found or already removed.');
-        }
+  private async checkIfExistsById(id: number): Promise<void> {
+    const exists = await this._repository.checkExists({ id });
+    if (!exists) {
+      throw new NotFoundException('User not found or already removed.');
     }
-
-    private getInternalServerErrorException(): InternalServerErrorException {
-        return new InternalServerErrorException(
-            'Due to an internal error, the operation could not be performed at this time. Please try again later.',
-        );
-    }
+  }
 }
+
 ```
 
 Finalizada a implementação da camada de negócio, vamos partir para a implementação dos testes. Nessa camada, deveremos
@@ -1067,26 +1108,26 @@ export class UserMock {
         model.age = 26;
         model.job = 'Developer';
         return model;
-      }
-    
-      public static get deserializedModel(): UserEntity {
+    }
+
+    public static get deserializedModel(): UserEntity {
         const entity: UserEntity = new UserEntity();
         entity.name = 'John Doe';
         entity.age = 26;
         entity.job = 'Developer';
         return entity;
-      }
+    }
 }
 ```
 
 Nos testes do `UserModelMapper`, existem duas condições principais que devem ser testadas para cada método: a situação
 do objeto a ser mapeado conter todos os parâmetros e também a situação de não conter nenhum. Você também pode testar
 situações de `undefined`, ou de não serem mapeados parâmetros específicos, para verificar se o comportamento do `mapper`
-realmente está correto, porém, para simplificar a implementação, não irei me ater a esses casos de teste nesse projeto.
+realmente está correto, porém, para simplificar a implementação, não vamos nos ater a esses casos de teste nesse projeto.
 
-No diretório `test/unit`, crie o diretório `business` e, nesse diretório, crie o diretório `mapper`. Logo após, em
-`test/unit/business/mapper`, crie o arquivo `user.model.mapper.spec`. Como já definimos quais condições devem ser
-testadas em cada método, o arquivo deverá ser configurado da seguinte forma:
+No diretório `test/unit`, vamos criar o diretório `business` e, nesse diretório, criar o diretório `mapper`. Logo após,
+em `test/unit/business/mapper`, vamos criar o arquivo `user.model.mapper.spec`. Como já definimos quais condições devem
+ser testadas em cada método, o arquivo deverá ser configurado da seguinte forma:
 
 ```ts
 import { UserModelMapper } from '../../../../src/business/mapper/user.model.mapper';
@@ -1129,6 +1170,7 @@ describe('UserModelMapper', () => {
         });
     });
 });
+
 ```
 
 Em seguida, nos testes do `UserService`, teremos as seguintes situações que devem ser testadas para cada método:
@@ -1143,239 +1185,255 @@ Em seguida, nos testes do `UserService`, teremos as seguintes situações que de
   verificação quanto na atualização.
 - `delete()`: o método `delete` não irá retornar nada, exceto em caso de erro.
 
-Dadas as situações, os testes devem ser implementados da seguinte forma:
+Nas situações de erro da camada de infraestrutura, sabemos que os erros do repositório não serão retornados, mas sim uma
+mensagem personalizada. Para evitar replicar essa mensagem durante as validações dos testes, vamos criar o
+diretório `util` em `test`. Em seguida, no diretório `test/util`, vamos criar o arquivo `error.util.ts`. Ele deverá
+estar configurado da seguinte forma:
 
 ```ts
-import { mock } from 'sinon';
-import { UserModelMapper } from '../../../../src/business/mapper/user.model.mapper';
-import { UserModel } from '../../../../src/business/model/user.model';
-import { UserService } from '../../../../src/business/service/user.service';
-import { UserMock } from '../../../mock/user.mock';
+export class ErrorUtil {
+  public static getServiceExceptionMessage(operation: string): string {
+    return `Due to an internal error, the operation '${operation}' could not be performed at this time. Please try again later.`;
+  }
+}
+
+```
+
+Dadas as situações de testes do `UserService`, os testes devem ser implementados da seguinte forma:
+
+```ts
+import { Repository } from 'typeorm'
+import { UserModelMapper } from '../../../../src/business/mapper/user.model.mapper'
+import { UserModel } from '../../../../src/business/model/user.model'
+import { UserService } from '../../../../src/business/service/user.service'
+import { UserRepository } from '../../../../src/infrastructure/repository/user.repository'
+import { UserMock } from '../../../mock/user.mock'
+import { ErrorUtil } from '../../../util/error.util'
 
 describe('UserService', () => {
-    let userRepository: any;
-    let userModelMapper: UserModelMapper;
-    let userService: UserService;
+  let userRepository: any;
+  let userModelMapper: UserModelMapper;
+  let userService: UserService;
 
-    beforeAll(() => {
-        userModelMapper = new UserModelMapper();
-        userRepository = mock();
-        userService = new UserService(userRepository, userModelMapper);
+  beforeAll(() => {
+    userModelMapper = new UserModelMapper();
+    userRepository = new UserRepository(new Repository());
+    userService = new UserService(userRepository, userModelMapper);
+  });
+
+  describe('create()', () => {
+    describe('when create is successful', () => {
+      it('should return the created user', async () => {
+        userRepository.create = jest
+                .fn()
+                .mockImplementation(() => Promise.resolve(UserMock.entity));
+
+        const result: UserModel = await userService.create(UserMock.model);
+        expect(result).toMatchObject(UserMock.model);
+      });
     });
 
-    describe('create()', () => {
-        describe('when create is successful', () => {
-            it('should return the created model', async () => {
-                userRepository.create = jest
-                    .fn()
-                    .mockImplementation(() => Promise.resolve(UserMock.entity));
-
-                const result: UserModel = await userService.create(UserMock.model);
-                expect(result).toMatchObject(UserMock.model);
-            });
-        });
-
-        describe('when an error is thrown', () => {
-            it('should throw the error', async () => {
-                userRepository.create = jest
-                    .fn()
-                    .mockImplementation(() =>
+    describe('when an error is thrown', () => {
+      it('should throw the error', async () => {
+        userRepository.create = jest
+                .fn()
+                .mockImplementation(() =>
                         Promise.reject({ message: 'Sensitive repository error' }),
-                    );
-                try {
-                    await userService.create(UserMock.model);
-                } catch (err) {
-                    expect(err).toHaveProperty(
-                        'message',
-                        'Due to an internal error, the operation could not be performed at this time. Please try again later.',
-                    );
-                }
-            });
-        });
-    });
-
-    describe('find()', () => {
-        describe('when find is successful', () => {
-            it('should return the found model list when there are models', async () => {
-                userRepository.find = jest
-                    .fn()
-                    .mockImplementation(() => Promise.resolve([UserMock.entity]));
-
-                const result: UserModel[] = await userService.find();
-                expect(result).toMatchObject([UserMock.model]);
-            });
-            it('should return an empty model list when there are no models', async () => {
-                userRepository.find = jest
-                    .fn()
-                    .mockImplementation(() => Promise.resolve([]));
-
-                const result: UserModel[] = await userService.find();
-                expect(result).toMatchObject([]);
-            });
-        });
-
-        describe('when an error is thrown', () => {
-            it('should throw the error', async () => {
-                userRepository.find = jest
-                    .fn()
-                    .mockImplementation(() =>
-                        Promise.reject({ message: 'Sensitive repository error' }),
-                    );
-                try {
-                    await userService.find();
-                } catch (err) {
-                    expect(err).toHaveProperty(
-                        'message',
-                        'Due to an internal error, the operation could not be performed at this time. Please try again later.',
-                    );
-                }
-            });
-        });
-    });
-
-    describe('findById()', () => {
-        describe('when findById is successful', () => {
-            it('should return the found entity', async () => {
-                userRepository.checkExists = jest
-                    .fn()
-                    .mockImplementation(() => Promise.resolve(true));
-                userRepository.findById = jest
-                    .fn()
-                    .mockImplementation(() => Promise.resolve(UserMock.entity));
-                const result: UserModel = await userService.findById(UserMock.model.id);
-                expect(result).toMatchObject(UserMock.model);
-            });
-        });
-
-        describe('when the model is not found', () => {
-            it('should throw the error for model not founded', async () => {
-                userRepository.checkExists = jest
-                    .fn()
-                    .mockImplementation(() => Promise.resolve(false));
-
-                try {
-                    await userService.findById(UserMock.model.id);
-                } catch (err) {
-                    expect(err).toHaveProperty(
-                        'message',
-                        'User not found or already removed.',
-                    );
-                }
-            });
-        });
-
-        describe('when an error is thrown', () => {
-            it('should throw the error', async () => {
-                userRepository.checkExists = jest
-                    .fn()
-                    .mockImplementation(() =>
-                        Promise.reject({ message: 'Sensitive repository error' }),
-                    );
-
-                try {
-                    await userService.findById(UserMock.model.id);
-                } catch (err) {
-                    expect(err).toHaveProperty(
-                        'message',
-                        'Due to an internal error, the operation could not be performed at this time. Please try again later.',
-                    );
-                }
-            });
-        });
-    });
-
-    describe('update()', () => {
-        describe('when update is successful', () => {
-            it('should return the found entity', async () => {
-                userRepository.checkExists = jest
-                    .fn()
-                    .mockImplementation(() => Promise.resolve(true));
-                userRepository.update = jest
-                    .fn()
-                    .mockImplementation(() => Promise.resolve(UserMock.entity));
-                const result: UserModel = await userService.update(
-                    UserMock.model.id,
-                    UserMock.model,
                 );
-                expect(result).toMatchObject(UserMock.model);
-            });
-        });
+        try {
+          await userService.create(UserMock.model);
+        } catch (err) {
+          expect(err).toHaveProperty(
+                  'message',
+                  ErrorUtil.getServiceExceptionMessage('create'),
+          );
+        }
+      });
+    });
+  });
 
-        describe('when the model is not found', () => {
-            it('should throw the error for model not founded', async () => {
-                userRepository.checkExists = jest
-                    .fn()
-                    .mockImplementation(() => Promise.resolve(false));
+  describe('find()', () => {
+    describe('when find is successful', () => {
+      it('should return the found model list when there are users', async () => {
+        userRepository.find = jest
+                .fn()
+                .mockImplementation(() => Promise.resolve([UserMock.entity]));
 
-                try {
-                    await userService.update(UserMock.model.id, UserMock.model);
-                } catch (err) {
-                    expect(err).toHaveProperty(
-                        'message',
-                        'User not found or already removed.',
-                    );
-                }
-            });
-        });
+        const result: UserModel[] = await userService.find();
+        expect(result).toMatchObject([UserMock.model]);
+      });
+      it('should return an empty model list when there are no users', async () => {
+        userRepository.find = jest
+                .fn()
+                .mockImplementation(() => Promise.resolve([]));
 
-        describe('when an error is thrown', () => {
-            it('should throw the error', async () => {
-                userRepository.checkExists = jest
-                    .fn()
-                    .mockImplementation(() =>
-                        Promise.reject({ message: 'Sensitive repository error' }),
-                    );
-
-                try {
-                    await userService.update(UserMock.model.id, UserMock.model);
-                } catch (err) {
-                    expect(err).toHaveProperty(
-                        'message',
-                        'Due to an internal error, the operation could not be performed at this time. Please try again later.',
-                    );
-                }
-            });
-        });
+        const result: UserModel[] = await userService.find();
+        expect(result).toMatchObject([]);
+      });
     });
 
-    describe('delete()', () => {
-        describe('when delete is successful', () => {
-            it('should return anything', async () => {
-                userRepository.delete = jest
-                    .fn()
-                    .mockImplementation(() => Promise.resolve());
-                await userService.delete(UserMock.entity.id);
-            });
-        });
-
-        describe('when an error is thrown', () => {
-            it('should throw the error', async () => {
-                userRepository.delete = jest
-                    .fn()
-                    .mockImplementation(() =>
+    describe('when an error is thrown', () => {
+      it('should throw the error', async () => {
+        userRepository.find = jest
+                .fn()
+                .mockImplementation(() =>
                         Promise.reject({ message: 'Sensitive repository error' }),
-                    );
-                try {
-                    await userService.delete(UserMock.entity.id);
-                } catch (err) {
-                    expect(err).toHaveProperty(
-                        'message',
-                        'Due to an internal error, the operation could not be performed at this time. Please try again later.',
-                    );
-                }
-            });
-        });
+                );
+        try {
+          await userService.find();
+        } catch (err) {
+          expect(err).toHaveProperty(
+                  'message',
+                  ErrorUtil.getServiceExceptionMessage('find'),
+          );
+        }
+      });
     });
+  });
+
+  describe('findById()', () => {
+    describe('when findById is successful', () => {
+      it('should return the found user', async () => {
+        userRepository.checkExists = jest
+                .fn()
+                .mockImplementation(() => Promise.resolve(true));
+        userRepository.findById = jest
+                .fn()
+                .mockImplementation(() => Promise.resolve(UserMock.entity));
+        const result: UserModel = await userService.findById(UserMock.model.id);
+        expect(result).toMatchObject(UserMock.model);
+      });
+    });
+
+    describe('when the model is not found', () => {
+      it('should throw the error for model not founded', async () => {
+        userRepository.checkExists = jest
+                .fn()
+                .mockImplementation(() => Promise.resolve(false));
+
+        try {
+          await userService.findById(UserMock.model.id);
+        } catch (err) {
+          expect(err).toHaveProperty(
+                  'message',
+                  'User not found or already removed.',
+          );
+        }
+      });
+    });
+
+    describe('when an error is thrown', () => {
+      it('should throw the error', async () => {
+        userRepository.checkExists = jest
+                .fn()
+                .mockImplementation(() =>
+                        Promise.reject({ message: 'Sensitive repository error' }),
+                );
+
+        try {
+          await userService.findById(UserMock.model.id);
+        } catch (err) {
+          expect(err).toHaveProperty(
+                  'message',
+                  ErrorUtil.getServiceExceptionMessage('findById'),
+          );
+        }
+      });
+    });
+  });
+
+  describe('update()', () => {
+    describe('when update is successful', () => {
+      it('should return the found user', async () => {
+        userRepository.checkExists = jest
+                .fn()
+                .mockImplementation(() => Promise.resolve(true));
+        userRepository.update = jest
+                .fn()
+                .mockImplementation(() => Promise.resolve(UserMock.entity));
+        const result: UserModel = await userService.update(
+                UserMock.model.id,
+                UserMock.model,
+        );
+        expect(result).toMatchObject(UserMock.model);
+      });
+    });
+
+    describe('when the user is not found', () => {
+      it('should throw the error for user not founded', async () => {
+        userRepository.checkExists = jest
+                .fn()
+                .mockImplementation(() => Promise.resolve(false));
+
+        try {
+          await userService.update(UserMock.model.id, UserMock.model);
+        } catch (err) {
+          expect(err).toHaveProperty(
+                  'message',
+                  'User not found or already removed.',
+          );
+        }
+      });
+    });
+
+    describe('when an error is thrown', () => {
+      it('should throw the error', async () => {
+        userRepository.checkExists = jest
+                .fn()
+                .mockImplementation(() =>
+                        Promise.reject({ message: 'Sensitive repository error' }),
+                );
+
+        try {
+          await userService.update(UserMock.model.id, UserMock.model);
+        } catch (err) {
+          expect(err).toHaveProperty(
+                  'message',
+                  ErrorUtil.getServiceExceptionMessage('update'),
+          );
+        }
+      });
+    });
+  });
+
+  describe('delete()', () => {
+    describe('when delete is successful', () => {
+      it('should return anything', async () => {
+        userRepository.delete = jest
+                .fn()
+                .mockImplementation(() => Promise.resolve());
+        await userService.delete(UserMock.entity.id);
+      });
+    });
+
+    describe('when an error is thrown', () => {
+      it('should throw the error', async () => {
+        userRepository.delete = jest
+                .fn()
+                .mockImplementation(() =>
+                        Promise.reject({ message: 'Sensitive repository error' }),
+                );
+        try {
+          await userService.delete(UserMock.entity.id);
+        } catch (err) {
+          expect(err).toHaveProperty(
+                  'message',
+                  ErrorUtil.getServiceExceptionMessage('delete'),
+          );
+        }
+      });
+    });
+  });
 });
+
 ```
 
 Após implementar todos os testes, e assegurar que os mesmos estão funcionando corretamente e com uma cobertura
-aceitável, vamos realizar um novo escaneamento do nosso projeto e atualizar o relatório do `SonarQube`. Certifique-se de
-que o `SonarQube` está rodando na sua máquina local. Em seguida, na raiz do projeto, execute o comando `sonar-scanner`.
-O resultado deverá ser como esse:
+aceitável (`npm run test:cov`), vamos realizar um novo escaneamento do nosso projeto e atualizar o relatório
+do `SonarQube`. Certifique-se de que o `SonarQube` está rodando na sua máquina local. Em seguida, em um terminal na raiz
+do projeto, execute o comando `sonar-scanner`. O resultado deverá ser como esse:
 
 ![sonar_scanner_business](images/sonar_scanner_business.png)
-
 
 #### 3.3.3 Camada de UI
 
@@ -1407,26 +1465,26 @@ Vamos começar pela implementação do `UserDTO`. Para isso, basta criar um arqu
 import { IsInt, IsNotEmpty, IsString, Min } from 'class-validator';
 
 export class UserDTO {
-  id: number;
+    id: number;
 
-  @IsString()
-  @IsNotEmpty()
-  name: string;
+    @IsString()
+    @IsNotEmpty()
+    name: string;
 
-  @IsInt()
-  @Min(18)
-  age: number;
+    @IsInt()
+    @Min(18)
+    age: number;
 
-  @IsString()
-  @IsNotEmpty()
-  job: string;
+    @IsString()
+    @IsNotEmpty()
+    job: string;
 }
+
 ```
 
 As anotações são validações que deverão ser feitas assim que a classe for instanciada. Caso algum parâmetro não esteja
 em conforme com as regras definidas nas anotações, um erro de validação será lançado para o cliente, como
 uma `BadRequestException`, informando quais parâmetros estão incorretos e quais regras definidas foram quebradas.
-Veremos isso adiante, durante a execução dos testes.
 
 Criado o dto `UserDTO`, vamos partir para a implementação do mapeador. Seguindo a estratégia de criar interfaces
 genéricas, em `src/ui/mapper` vamos criar o diretório `interface` e, nesse diretório, criar o
@@ -1434,14 +1492,15 @@ arquivo `dto.mapper.interface.ts`. Ele deve estar configurado da seguinte forma:
 
 ```ts
 export interface IDTOMapper<DTO, Model> {
-  serialize(item: Model): DTO;
+    serialize(item: Model): DTO;
 
-  deserialize(item: DTO): Model;
+    deserialize(item: DTO): Model;
 }
+
 ```
 
-Em seguida, vamos criar a interface do mapeador do `UserDTO`. Para isso, no diretório `src/ui/mapper/interface`,
-vamos criar o arquivo `user.dto.mapper.interface.ts`. Ele deve estar configurado da seguinte forma:
+Em seguida, vamos criar a interface do mapeador do `UserDTO`. Para isso, no diretório `src/ui/mapper/interface`, vamos
+criar o arquivo `user.dto.mapper.interface.ts`. Ele deve estar configurado da seguinte forma:
 
 ```ts
 import { UserModel } from '../../../business/model/user.model';
@@ -1449,10 +1508,11 @@ import { UserDTO } from '../../../ui/dto/user.dto';
 import { IDTOMapper } from './dto.mapper.interface';
 
 export interface IUserDTOMapper extends IDTOMapper<UserDTO, UserModel> {}
+
 ```
 
-Logo após, vamos criar a classe mapeadora. No diretório `src/ui/mapper`, vamos criar o arquivo `user.dto.mapper`
-. Ele deve estar configurado da seguinte forma:
+Logo após, vamos criar a classe mapeadora. No diretório `src/ui/mapper`, vamos criar o arquivo `user.dto.mapper`. Ele
+deve estar configurado da seguinte forma:
 
 ```ts
 import { Injectable } from '@nestjs/common';
@@ -1462,23 +1522,24 @@ import { IUserDTOMapper } from './interface/user.dto.mapper.interface';
 
 @Injectable()
 export class UserDTOMapper implements IUserDTOMapper {
-  deserialize(item: UserDTO): UserModel {
-    const result: UserModel = new UserModel();
-    if (item.name) result.name = item.name;
-    if (item.age) result.age = item.age;
-    if (item.job) result.job = item.job;
-    return result;
-  }
+    deserialize(item: UserDTO): UserModel {
+        const result: UserModel = new UserModel();
+        if (item.name) result.name = item.name;
+        if (item.age) result.age = item.age;
+        if (item.job) result.job = item.job;
+        return result;
+    }
 
-  serialize(item: UserModel): UserDTO {
-    const result: UserDTO = new UserDTO();
-    if (item.id) result.id = item.id;
-    if (item.name) result.name = item.name;
-    if (item.age) result.age = item.age;
-    if (item.job) result.job = item.job;
-    return result;
-  }
+    serialize(item: UserModel): UserDTO {
+        const result: UserDTO = new UserDTO();
+        if (item.id) result.id = item.id;
+        if (item.name) result.name = item.name;
+        if (item.age) result.age = item.age;
+        if (item.job) result.job = item.job;
+        return result;
+    }
 }
+
 ```
 
 Finalizada a implementação do mapeador, vamos partir para a implementação do controlador. O controlador não precisa de
@@ -1487,15 +1548,15 @@ configuração:
 
 ```ts
 import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  Post,
-  Put,
+    Body,
+    Controller,
+    Delete,
+    Get,
+    HttpCode,
+    HttpStatus,
+    Param,
+    Post,
+    Put,
 } from '@nestjs/common';
 import { UserModel } from '../../business/model/user.model';
 import { UserService } from '../../business/service/user.service';
@@ -1504,51 +1565,56 @@ import { UserDTOMapper } from '../mapper/user.dto.mapper';
 
 @Controller('users')
 export class UserController {
-  constructor(
-          private readonly _service: UserService,
-          private readonly _mapper: UserDTOMapper,
-  ) {}
+    constructor(
+        private readonly _service: UserService,
+        private readonly _mapper: UserDTOMapper,
+    ) {
+    }
 
-  @Post()
-  async create(@Body() userDTO: UserDTO): Promise<UserDTO> {
-    const model: UserModel = this._mapper.deserialize(userDTO);
-    const result: UserModel = await this._service.create(model);
-    return this._mapper.serialize(result);
-  }
+    @Post()
+    async create(@Body() userDTO: UserDTO): Promise<UserDTO> {
+        const model: UserModel = this._mapper.deserialize(userDTO);
+        const result: UserModel = await this._service.create(model);
+        return this._mapper.serialize(result);
+    }
 
-  @Get()
-  async find(): Promise<UserDTO[]> {
-    const result: UserModel[] = await this._service.find();
-    return result.map((model) => this._mapper.serialize(model));
-  }
+    @Get()
+    async find(): Promise<UserDTO[]> {
+        const result: UserModel[] = await this._service.find();
+        return result.map((model) => this._mapper.serialize(model));
+    }
 
-  @Get(':id')
-  async findById(@Param('id') id: number): Promise<UserDTO> {
-    const result: UserModel = await this._service.findById(id);
-    return this._mapper.serialize(result);
-  }
+    @Get(':id')
+    async findById(@Param('id') id: number): Promise<UserDTO> {
+        const result: UserModel = await this._service.findById(+id);
+        return this._mapper.serialize(result);
+    }
 
-  @Put(':id')
-  async update(
-          @Param('id') id: number,
-          @Body() userDTO: UserDTO,
-  ): Promise<UserDTO> {
-    const model: UserModel = this._mapper.deserialize(userDTO);
-    const result: UserModel = await this._service.update(id, model);
-    return this._mapper.serialize(result);
-  }
+    @Put(':id')
+    async update(
+        @Param('id') id: number,
+        @Body() userDTO: UserDTO,
+    ): Promise<UserDTO> {
+        const model: UserModel = this._mapper.deserialize(userDTO);
+        const result: UserModel = await this._service.update(+id, model);
+        return this._mapper.serialize(result);
+    }
 
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async delete(@Param('id') id: number): Promise<void> {
-    await this._service.delete(id);
-  }
+    @Delete(':id')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async delete(@Param('id') id: number): Promise<void> {
+        await this._service.delete(id);
+    }
 }
+
 ```
 
+Esses símbolos de + antes dos ids nos métodos `findById()` e `update()` servem para fazer um `cast number`, assegurando
+que os parâmetros vão ser enviados como números inteiros, e não como strings.
+
 Por fim, vamos criar o `UserModule`, módulo que deverá conter todas as configurações referentes à entidade `User`. Para
-isso, basta criar um arquivo no diretório `src/ui/module` denominado `user.module.ts`
-. Ele deve estar configurado da seguinte forma:
+isso, basta criar um arquivo no diretório `src/ui/module` denominado `user.module.ts`. Ele deve estar configurado da
+seguinte forma:
 
 ```ts
 import { Module } from '@nestjs/common';
@@ -1561,11 +1627,12 @@ import { UserController } from '../controller/user.controller';
 import { UserDTOMapper } from '../mapper/user.dto.mapper';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity])],
-  controllers: [UserController],
-  providers: [UserDTOMapper, UserModelMapper, UserService, UserRepository],
+    imports: [TypeOrmModule.forFeature([UserEntity])],
+    controllers: [UserController],
+    providers: [UserDTOMapper, UserModelMapper, UserService, UserRepository],
 })
 export class UserModule {}
+
 ```
 
 Esse módulo possui algumas configurações que são pertinentes à entidade `User`. Em síntese:
@@ -1590,20 +1657,21 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user.module';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot(), // config used to load environment variables
-    TypeOrmModule.forRoot({
-      type: 'sqlite', // type of database used on typeorm
-      database: '.database/nest-api-with-sonar-qube.db', // database path
-      autoLoadEntities: true, // load all entities defined in another modules
-      synchronize: true, // sync tables with entity definitions automatically (for dev purposes)
-    }),
-    UserModule,
-  ],
-  controllers: [AppController],
-  providers: [AppService],
+    imports: [
+        ConfigModule.forRoot(), // config used to load environment variables
+        TypeOrmModule.forRoot({
+            type: 'sqlite', // type of database used on typeorm
+            database: '.database/nest-api-with-sonar-qube.db', // database path
+            autoLoadEntities: true, // load all entities defined in another modules
+            synchronize: true, // sync tables with entity definitions automatically (for dev purposes)
+        }),
+        UserModule,
+    ],
+    controllers: [AppController],
+    providers: [AppService],
 })
 export class AppModule {}
+
 ```
 
 Antes de iniciar os testes da camada de `ui`, execute no terminal na raiz do projeto o comando `npm run start:dev`, para
@@ -1613,7 +1681,7 @@ terminal deverá aparecer as seguintes informações:
 ![first_start_dev_successful](images/first_start_dev_successful.png)
 
 Agora você pode “derrubar” a aplicação com o comando `ctrl+c`. Vamos partir para a implementação dos testes. Antes de
-iniciar os testes, vamos adicionar o mock de `UserDTO`. Em `test/mock/user.mock`, adicione os métodos `dto()`
+iniciar os testes, vamos adicionar o mock de `UserDTO`. Em `test/mock/user.mock`, vamos adicionar os métodos `dto()`
 e `desserializedDTO()`. A classe `UserMock` deve estar implementada da seguinte forma:
 
 ```ts
@@ -1622,49 +1690,50 @@ import { UserModel } from '../../src/business/model/user.model';
 import { UserEntity } from '../../src/infrastructure/entity/user.entity';
 
 export class UserMock {
-  public static get entity(): UserEntity {
-    const entity: UserEntity = new UserEntity();
-    entity.id = 1;
-    entity.name = 'John Doe';
-    entity.age = 26;
-    entity.job = 'Developer';
-    return entity;
-  }
+    public static get entity(): UserEntity {
+        const entity: UserEntity = new UserEntity();
+        entity.id = 1;
+        entity.name = 'John Doe';
+        entity.age = 26;
+        entity.job = 'Developer';
+        return entity;
+    }
 
-  public static get model(): UserModel {
-    const model: UserModel = new UserModel();
-    model.id = 1;
-    model.name = 'John Doe';
-    model.age = 26;
-    model.job = 'Developer';
-    return model;
-  }
+    public static get model(): UserModel {
+        const model: UserModel = new UserModel();
+        model.id = 1;
+        model.name = 'John Doe';
+        model.age = 26;
+        model.job = 'Developer';
+        return model;
+    }
 
-  public static get deserializedModel(): UserEntity {
-    const entity: UserEntity = new UserEntity();
-    entity.name = 'John Doe';
-    entity.age = 26;
-    entity.job = 'Developer';
-    return entity;
-  }
+    public static get deserializedModel(): UserEntity {
+        const entity: UserEntity = new UserEntity();
+        entity.name = 'John Doe';
+        entity.age = 26;
+        entity.job = 'Developer';
+        return entity;
+    }
 
-  public static get dto(): UserDTO {
-    const dto: UserDTO = new UserDTO();
-    dto.id = 1;
-    dto.name = 'John Doe';
-    dto.age = 26;
-    dto.job = 'Developer';
-    return dto;
-  }
+    public static get dto(): UserDTO {
+        const dto: UserDTO = new UserDTO();
+        dto.id = 1;
+        dto.name = 'John Doe';
+        dto.age = 26;
+        dto.job = 'Developer';
+        return dto;
+    }
 
-  public static get deserializedDTO(): UserModel {
-    const model: UserModel = new UserModel();
-    model.name = 'John Doe';
-    model.age = 26;
-    model.job = 'Developer';
-    return model;
-  }
+    public static get deserializedDTO(): UserModel {
+        const model: UserModel = new UserModel();
+        model.name = 'John Doe';
+        model.age = 26;
+        model.job = 'Developer';
+        return model;
+    }
 }
+
 ```
 
 Agora, vamos iniciar os testes dos `mappers`. O comportamento dos testes é semelhante aos mappers do `UserModelMapper`.
@@ -1678,40 +1747,41 @@ import { UserDTOMapper } from '../../../../src/ui/mapper/user.dto.mapper';
 import { UserMock } from '../../../mock/user.mock';
 
 describe('UserDTOMapper', () => {
-  const userDTOMapper = new UserDTOMapper();
+    const userDTOMapper = new UserDTOMapper();
 
-  describe('deserialize()', () => {
-    describe('when deserialize a dto to model', () => {
-      it('should return the deserialized model', () => {
-        const result: UserModel = userDTOMapper.deserialize(UserMock.dto);
-        expect(result).toMatchObject(UserMock.deserializedDTO);
-      });
+    describe('deserialize()', () => {
+        describe('when deserialize a dto to model', () => {
+            it('should return the deserialized model', () => {
+                const result: UserModel = userDTOMapper.deserialize(UserMock.dto);
+                expect(result).toMatchObject(UserMock.deserializedDTO);
+            });
+        });
+
+        describe('when the dto is empty', () => {
+            it('should return an empty model', () => {
+                const result: UserModel = userDTOMapper.deserialize(new UserDTO());
+                expect(result).toMatchObject(new UserModel());
+            });
+        });
     });
 
-    describe('when the dto is empty', () => {
-      it('should return an empty model', () => {
-        const result: UserModel = userDTOMapper.deserialize(new UserDTO());
-        expect(result).toMatchObject(new UserModel());
-      });
-    });
-  });
+    describe('serialize()', () => {
+        describe('when serialize a model to dto', () => {
+            it('should return the serialized dto', () => {
+                const result: UserDTO = userDTOMapper.serialize(UserMock.model);
+                expect(result).toMatchObject(UserMock.dto);
+            });
+        });
 
-  describe('serialize()', () => {
-    describe('when serialize a model to dto', () => {
-      it('should return the serialized dto', () => {
-        const result: UserDTO = userDTOMapper.serialize(UserMock.model);
-        expect(result).toMatchObject(UserMock.dto);
-      });
+        describe('when the model is empty', () => {
+            it('should return an empty dto', () => {
+                const result: UserDTO = userDTOMapper.serialize(new UserModel());
+                expect(result).toMatchObject(new UserDTO());
+            });
+        });
     });
-
-    describe('when the model is empty', () => {
-      it('should return an empty dto', () => {
-        const result: UserDTO = userDTOMapper.serialize(new UserModel());
-        expect(result).toMatchObject(new UserDTO());
-      });
-    });
-  });
 });
+
 ```
 
 Em seguida, nos testes do `UserController`, teremos as seguintes situações que devem ser testadas para cada método:
@@ -1726,27 +1796,30 @@ Em seguida, nos testes do `UserController`, teremos as seguintes situações que
   verificação quanto na atualização.
 - `delete()`: o método `delete` não irá retornar nada, exceto em caso de erro.
 
-Eu não irei utilizar a abordagem definida como exemplo no `app.controller.spec.ts`. Muito embora exista essa facilidade,
-mas eu ainda prefiro optar pelo uso do Sinon, mockando as dependências injetadas como se elas nem existissem, apenas
-para avaliar o comportamento da classe testada em questão.
-
 Dadas as situações, os testes devem ser implementados da seguinte forma:
 
 ```ts
-import { UserDTOMapper } from '../../../../src/ui/mapper/user.dto.mapper';
-import { mock } from 'sinon';
+import { Repository } from 'typeorm';
+import { UserModelMapper } from '../../../../src/business/mapper/user.model.mapper';
+import { UserService } from '../../../../src/business/service/user.service';
+import { UserRepository } from '../../../../src/infrastructure/repository/user.repository';
 import { UserController } from '../../../../src/ui/controller/user.controller';
-import { UserMock } from '../../../mock/user.mock';
 import { UserDTO } from '../../../../src/ui/dto/user.dto';
+import { UserDTOMapper } from '../../../../src/ui/mapper/user.dto.mapper';
+import { UserMock } from '../../../mock/user.mock';
+import { ErrorUtil } from '../../../util/error.util';
 
 describe('UserController', () => {
-  let userService: any;
+  let userService: UserService;
   let userDTOMapper: UserDTOMapper;
   let userController: UserController;
 
   beforeAll(() => {
     userDTOMapper = new UserDTOMapper();
-    userService = mock();
+    userService = new UserService(
+            new UserRepository(new Repository()),
+            new UserModelMapper(),
+    );
     userController = new UserController(userService, userDTOMapper);
   });
 
@@ -1754,8 +1827,8 @@ describe('UserController', () => {
     describe('when create is successful', () => {
       it('should return the created user', async () => {
         userService.create = jest
-          .fn()
-          .mockImplementation(() => Promise.resolve(UserMock.model));
+                .fn()
+                .mockImplementation(() => Promise.resolve(UserMock.model));
 
         const result: UserDTO = await userController.create(UserMock.dto);
         expect(result).toMatchObject(UserMock.dto);
@@ -1765,17 +1838,16 @@ describe('UserController', () => {
     describe('when an error is thrown', () => {
       it('should throw the error', async () => {
         userService.create = jest.fn().mockImplementation(() =>
-          Promise.reject({
-            message:
-              'Due to an internal error, the operation could not be performed at this time. Please try again later.',
-          }),
+                Promise.reject({
+                  message: ErrorUtil.getServiceExceptionMessage('create'),
+                }),
         );
         try {
           await userController.create(UserMock.dto);
         } catch (err) {
           expect(err).toHaveProperty(
-            'message',
-            'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+                  'message',
+                  ErrorUtil.getServiceExceptionMessage('create'),
           );
         }
       });
@@ -1786,16 +1858,16 @@ describe('UserController', () => {
     describe('when find is successful', () => {
       it('should return the found dto list when there are users', async () => {
         userService.find = jest
-          .fn()
-          .mockImplementation(() => Promise.resolve([UserMock.model]));
+                .fn()
+                .mockImplementation(() => Promise.resolve([UserMock.model]));
 
         const result: UserDTO[] = await userController.find();
         expect(result).toMatchObject([UserMock.dto]);
       });
       it('should return an empty dto list when there are no users', async () => {
         userService.find = jest
-          .fn()
-          .mockImplementation(() => Promise.resolve([]));
+                .fn()
+                .mockImplementation(() => Promise.resolve([]));
 
         const result: UserDTO[] = await userController.find();
         expect(result).toMatchObject([]);
@@ -1805,17 +1877,16 @@ describe('UserController', () => {
     describe('when an error is thrown', () => {
       it('should throw the error', async () => {
         userService.find = jest.fn().mockImplementation(() =>
-          Promise.reject({
-            message:
-              'Due to an internal error, the operation could not be performed at this time. Please try again later.',
-          }),
+                Promise.reject({
+                  message: ErrorUtil.getServiceExceptionMessage('find'),
+                }),
         );
         try {
           await userController.find();
         } catch (err) {
           expect(err).toHaveProperty(
-            'message',
-            'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+                  'message',
+                  ErrorUtil.getServiceExceptionMessage('find'),
           );
         }
       });
@@ -1826,8 +1897,8 @@ describe('UserController', () => {
     describe('when findById is successful', () => {
       it('should return the found user', async () => {
         userService.findById = jest
-          .fn()
-          .mockImplementation(() => Promise.resolve(UserMock.model));
+                .fn()
+                .mockImplementation(() => Promise.resolve(UserMock.model));
         const result: UserDTO = await userController.findById(UserMock.dto.id);
         expect(result).toMatchObject(UserMock.dto);
       });
@@ -1836,17 +1907,17 @@ describe('UserController', () => {
     describe('when the user is not found', () => {
       it('should throw the error for user not founded', async () => {
         userService.findById = jest
-          .fn()
-          .mockImplementation(() =>
-            Promise.reject({ message: 'User not found or already removed.' }),
-          );
+                .fn()
+                .mockImplementation(() =>
+                        Promise.reject({ message: 'User not found or already removed.' }),
+                );
 
         try {
           await userController.findById(UserMock.dto.id);
         } catch (err) {
           expect(err).toHaveProperty(
-            'message',
-            'User not found or already removed.',
+                  'message',
+                  'User not found or already removed.',
           );
         }
       });
@@ -1855,18 +1926,17 @@ describe('UserController', () => {
     describe('when an error is thrown', () => {
       it('should throw the error', async () => {
         userService.findById = jest.fn().mockImplementation(() =>
-          Promise.reject({
-            message:
-              'Due to an internal error, the operation could not be performed at this time. Please try again later.',
-          }),
+                Promise.reject({
+                  message: ErrorUtil.getServiceExceptionMessage('findById'),
+                }),
         );
 
         try {
           await userController.findById(UserMock.dto.id);
         } catch (err) {
           expect(err).toHaveProperty(
-            'message',
-            'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+                  'message',
+                  ErrorUtil.getServiceExceptionMessage('findById'),
           );
         }
       });
@@ -1877,11 +1947,11 @@ describe('UserController', () => {
     describe('when update is successful', () => {
       it('should return the updated user', async () => {
         userService.update = jest
-          .fn()
-          .mockImplementation(() => Promise.resolve(UserMock.model));
+                .fn()
+                .mockImplementation(() => Promise.resolve(UserMock.model));
         const result: UserDTO = await userController.update(
-          UserMock.dto.id,
-          UserMock.dto,
+                UserMock.dto.id,
+                UserMock.dto,
         );
         expect(result).toMatchObject(UserMock.dto);
       });
@@ -1890,17 +1960,17 @@ describe('UserController', () => {
     describe('when the user is not found', () => {
       it('should throw the error for user not founded', async () => {
         userService.update = jest
-          .fn()
-          .mockImplementation(() =>
-            Promise.reject({ message: 'User not found or already removed.' }),
-          );
+                .fn()
+                .mockImplementation(() =>
+                        Promise.reject({ message: 'User not found or already removed.' }),
+                );
 
         try {
           await userController.update(UserMock.dto.id, UserMock.dto);
         } catch (err) {
           expect(err).toHaveProperty(
-            'message',
-            'User not found or already removed.',
+                  'message',
+                  'User not found or already removed.',
           );
         }
       });
@@ -1909,18 +1979,17 @@ describe('UserController', () => {
     describe('when an error is thrown', () => {
       it('should throw the error', async () => {
         userService.update = jest.fn().mockImplementation(() =>
-          Promise.reject({
-            message:
-              'Due to an internal error, the operation could not be performed at this time. Please try again later.',
-          }),
+                Promise.reject({
+                  message: ErrorUtil.getServiceExceptionMessage('update'),
+                }),
         );
 
         try {
           await userController.update(UserMock.dto.id, UserMock.dto);
         } catch (err) {
           expect(err).toHaveProperty(
-            'message',
-            'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+                  'message',
+                  ErrorUtil.getServiceExceptionMessage('update'),
           );
         }
       });
@@ -1931,8 +2000,8 @@ describe('UserController', () => {
     describe('when delete is successful', () => {
       it('should return anything', async () => {
         userService.delete = jest
-          .fn()
-          .mockImplementation(() => Promise.resolve());
+                .fn()
+                .mockImplementation(() => Promise.resolve());
         await userController.delete(UserMock.model.id);
       });
     });
@@ -1940,23 +2009,23 @@ describe('UserController', () => {
     describe('when an error is thrown', () => {
       it('should throw the error', async () => {
         userService.delete = jest.fn().mockImplementation(() =>
-          Promise.reject({
-            message:
-              'Due to an internal error, the operation could not be performed at this time. Please try again later.',
-          }),
+                Promise.reject({
+                  message: ErrorUtil.getServiceExceptionMessage('delete'),
+                }),
         );
         try {
           await userController.delete(UserMock.model.id);
         } catch (err) {
           expect(err).toHaveProperty(
-            'message',
-            'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+                  'message',
+                  ErrorUtil.getServiceExceptionMessage('delete'),
           );
         }
       });
     });
   });
 });
+
 ```
 
 Você pode se questionar o motivo pelo qual não foram testadas as situações de erro de validação nos métodos `create()`
@@ -1964,11 +2033,11 @@ e `update()`. A explicação é simples: esses testes só poderão ser realizado
 seguir. A validação do DTO é feita no momento da serialização do `JSON` enviado pelo cliente para um objeto do tipo
 `UserDTO`. O responsável por essa serialização é a biblioteca `class-transformer`. Ou seja, antes mesmo do objeto ser
 disponibilizado no método do `controller`, ele é validado através da configuração de `ValidationPipes` e, caso não
-esteja conforme as regras definidas, o erro de validação é lançado para o cliente. 
+esteja conforme as regras definidas, o erro de validação é lançado para o cliente.
 
 Após implementar todos os testes, e assegurar que os mesmos estão funcionando corretamente e com uma cobertura
 aceitável, vamos realizar um novo escaneamento do nosso projeto e atualizar o relatório do `SonarQube`. Certifique-se de
-que o `SonarQube` está rodando na sua máquina local. Em seguida, na raiz do projeto, execute o comando `sonar-scanner`.
+que o `SonarQube` está rodando na sua máquina local. Em seguida, em um terminal na raiz do projeto, execute o comando `sonar-scanner`.
 O resultado deverá ser como esse:
 
 ![sonar_scanner_ui](images/sonar_scanner_ui.png)
@@ -1977,26 +2046,635 @@ O resultado deverá ser como esse:
 
 Partindo para os testes `e2e`, vamos simular requisições feitas via HTTP Request, como se fôssemos os clientes da API.
 
-[comment]: <> (Em implementações robustas, que utilizam bancos de dados como MySQL, SQL Server ou MongoDB, você possui duas opções:)
+Em implementações que utilizam bancos de dados como MySQL, SQL Server ou MongoDB, você possui duas opções:
 
-[comment]: <> (1. Ter um banco só para testes, e executar o caminho completo, com inserção/busca/atualização/deleção de dados no banco.)
+1. Ter um banco só para testes, e executar o teste com o fluxo completo, com inserção/busca/atualização/deleção de dados
+   no banco.
 
-[comment]: <> (2. Simular o retorno de todas as chamadas que são feitas ao banco de dados através de um `spy`.)
+2. Simular o retorno de todas as chamadas que são feitas ao banco de dados através de um `spy` nas chamadas do
+   repositório.
 
-[comment]: <> (Para esse projeto, irei optar pela segunda alternativa, até porque no dia a dia nem sempre temos a disponibilidade de)
-
-[comment]: <> (ter um banco só para testes.)
-
-Para implementar os testes `e2e`, vamos utilizar a implementação utilizada em `app.e2e.spec.ts`, localizado
-em `test/e2e`, porém para o contexto de usuário.
+Vamos começar pela primeira opção. Para isso, é preciso configurar um banco de dados só para testes. Vamos criar então
+um módulo de testes, com configurações semelhantes ao `AppModule`. Para isso, vamos criar o diretório `module` em `test`
+e, no diretório `test/module`, vamos criar o arquivo `test.e2e.module.ts`. Esse arquivo deve estar configurado da 
+seguinte forma: 
 
 ```ts
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { AppService } from '../../src/business/service/app.service';
+import { UserEntity } from '../../src/infrastructure/entity/user.entity';
+import { AppController } from '../../src/ui/controller/app.controller';
+import { UserModule } from '../../src/ui/module/user.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot(),
+    TypeOrmModule.forRoot({
+      type: 'sqlite',
+      database: '.database/nest-api-with-sonar-qube-test.db',
+      autoLoadEntities: true,
+      synchronize: true,
+    }),
+    UserModule,
+  ],
+  controllers: [AppController],
+  providers: [
+    AppService,
+    {
+      provide: getRepositoryToken(UserEntity),
+      useClass: Repository,
+    },
+  ],
+})
+export class TestE2EModule {}
 
 ```
 
-Após isso, vamos iniciar os testes das requisições de `User`, criando o arquivo `user.e2e.spec.ts` em `test/e2e` e
-implementar os testes. Ele deve estar configurado da seguinte forma:
+A seguir, em `test/e2e` vamos criar o arquivo de testes e2e `user.e2e.spec.ts`. A configuração desse arquivo é
+semelhante à configuração do `app.e2e.spec.ts`. Vamos criar uma instância do `app`, baseado no `TestE2EModule`. Além
+disso, vamos deixar configurado o `globalPipes`, semelhante à configuração do arquivo `main.ts`. Por fim, vamos
+recuperar a instância do repositório do `Typeorm` para a entidade `UserEntity`, para podermos utilizar o `spy`
+e simular os retornos dos métodos antes que os dados sejam inseridos no banco.
+
+Após isso, basta implementar as chamadas HTTP, como um cliente, e validar os retornos. O arquivo deve estar configurado 
+da seguinte forma:
 
 ```ts
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import { UserEntity } from '../../src/infrastructure/entity/user.entity';
+import * as Request from 'supertest';
+import { getRepository, Repository } from 'typeorm';
+import { UserMock } from '../mock/user.mock';
+import { TestE2EModule } from '../module/test.e2e.module';
+
+describe('UserController (e2e)', () => {
+  let app: INestApplication;
+  let currentUserId: number = 0;
+  let repository: Repository<UserEntity>;
+  let request: Request.SuperTest<Request.Test>;
+
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [TestE2EModule],
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    // Validate data transfer objects
+    app.useGlobalPipes(new ValidationPipe());
+    await app.init();
+
+    request = Request(app.getHttpServer());
+    // Add a repository instance to help us create situations while running tests.
+    repository = getRepository(UserEntity);
+  });
+
+  afterAll(async () => {
+    // Clean test database after finish the tests
+    await repository.delete({});
+    await app.close();
+  });
+
+  describe('POST /users', () => {
+    describe('when save an user', () => {
+      it('should return status code 201 and created user', async () => {
+        const res = await request.post('/users').send({
+          name: UserMock.dto.name,
+          age: UserMock.dto.age,
+          job: UserMock.dto.job,
+        });
+        expect(res.statusCode).toBe(201);
+        expect(res.body).toHaveProperty('name', UserMock.dto.name);
+        expect(res.body).toHaveProperty('age', UserMock.dto.age);
+        expect(res.body).toHaveProperty('job', UserMock.dto.job);
+        currentUserId = res.body.id;
+        return res;
+      });
+    });
+
+    describe('when there are validation errors', () => {
+      it('should return status code 400 and error message for missing fields', async () => {
+        const res = await request.post('/users').send({});
+        expect(res.statusCode).toBe(400);
+        expect(res.body).toHaveProperty('statusCode', 400);
+        expect(res.body).toHaveProperty('message');
+        expect(res.body.message).toHaveLength(6);
+        expect(res.body).toHaveProperty('error', 'Bad Request');
+        return res;
+      });
+      it('should return status code 400 and error message for invalid fields', async () => {
+        const res = await request.post('/users').send({
+          name: UserMock.dto.name,
+          age: `${UserMock.dto.age}`,
+          job: UserMock.dto.job,
+        });
+        expect(res.statusCode).toBe(400);
+        expect(res.body).toHaveProperty('message');
+        expect(res.body.message).toHaveLength(2);
+        expect(res.body).toHaveProperty('error', 'Bad Request');
+        return res;
+      });
+    });
+  });
+
+  describe('GET /users', () => {
+    describe('when finding a list of users', () => {
+      it('should return status code 200 and a list of users', async () => {
+        const res = await request.get(`/users`);
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toBeInstanceOf(Array);
+        expect(res.body).toHaveLength(1);
+      });
+    });
+
+    describe('when there is no users', () => {
+      it('should return status code 200 and an empty list', async () => {
+        await repository.delete(currentUserId);
+        const res = await request.get(`/users`);
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toBeInstanceOf(Array);
+        expect(res.body).toHaveLength(0);
+      });
+    });
+    /**
+     * Save an user at the end of tests from GET /users block,
+     * to compensate for the deletion made in the search
+     * test case without users
+     */
+    afterAll(async () => {
+      const { id } = await repository.save({
+        name: UserMock.dto.name,
+        age: UserMock.dto.age,
+        job: UserMock.dto.job,
+      });
+      currentUserId = id;
+    });
+  });
+
+  describe('GET /users/:id', () => {
+    describe('when finding a user by id', () => {
+      it('should return status code 200 and founded user', async () => {
+        const res = await request.get(`/users/${currentUserId}`);
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty('name', UserMock.dto.name);
+        expect(res.body).toHaveProperty('age', UserMock.dto.age);
+        expect(res.body).toHaveProperty('job', UserMock.dto.job);
+        return res;
+      });
+    });
+
+    describe('when the user is not founded', () => {
+      it('should return status code 404 and error message for user not founded', async () => {
+        const randomId: number =
+          Math.floor(Math.random() * 100) + currentUserId;
+        const res = await request.get(`/users/${randomId}`);
+        expect(res.statusCode).toBe(404);
+        expect(res.body).toHaveProperty(
+          'message',
+          'User not found or already removed.',
+        );
+        expect(res.body).toHaveProperty('error', 'Not Found');
+        return res;
+      });
+    });
+  });
+
+  describe('PUT /users/:id', () => {
+    const updatedUser = {
+      name: `${UserMock.dto.name} Jr`,
+      age: UserMock.dto.age + 10,
+      job: `${UserMock.dto.job} II`,
+    };
+    describe('when updating a user by id', () => {
+      it('should return status code 200 and updated user', async () => {
+        const res = await request
+          .put(`/users/${currentUserId}`)
+          .send(updatedUser);
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty('name', updatedUser.name);
+        expect(res.body).toHaveProperty('age', updatedUser.age);
+        expect(res.body).toHaveProperty('job', updatedUser.job);
+        return res;
+      });
+    });
+
+    describe('when the user is not founded', () => {
+      it('should return status code 404 and error message for user not founded', async () => {
+        const randomId: number =
+          Math.floor(Math.random() * 100) + currentUserId;
+        const res = await request.put(`/users/${randomId}`).send(updatedUser);
+        expect(res.statusCode).toBe(404);
+        expect(res.body).toHaveProperty(
+          'message',
+          'User not found or already removed.',
+        );
+        expect(res.body).toHaveProperty('error', 'Not Found');
+        return res;
+      });
+    });
+  });
+
+  describe('DELETE /users/:id', () => {
+    describe('when deleting a user by id', () => {
+      it('should return status code 204 and no content', async () => {
+        const res = await request.delete(`/users/${currentUserId}`);
+        expect(res.statusCode).toBe(204);
+        expect(res.body).toMatchObject({});
+        return res;
+      });
+    });
+
+    describe('when the user is not founded', () => {
+      it('should return status code 204 and no content', async () => {
+        const randomId: number =
+          Math.floor(Math.random() * 100) + currentUserId;
+        const res = await request.delete(`/users/${randomId}`);
+        expect(res.statusCode).toBe(204);
+        expect(res.body).toMatchObject({});
+        return res;
+      });
+    });
+  });
+});
 
 ```
+
+A desvantagem da implementação dos testes `e2e` integrados com a base de dados é que é complicado simular um erro 
+interno como cliente da aplicação. Mas isso pode ser contornado com os testes `e2e` + `spies`. Vamos aproveitar a mesma
+implementação do `app.e2e.spec.ts`, remover toda e qualquer interação com o banco, adicionar os spies para cada chamada
+que deveria ter interação com o banco (sucesso ou erro interno) e adicionar as interações que geram erro interno. 
+
+Logo, vamos criar uma cópia do arquivo `user.e2e.spec.ts` e renomeá-la para `user.e2e.with.spy.spec.ts`. O arquivo deve
+estar configurado da seguinte forma:
+
+```ts
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import * as Request from 'supertest';
+import { getRepository, Repository } from 'typeorm';
+import { UserEntity } from '../../src/infrastructure/entity/user.entity';
+import { UserMock } from '../mock/user.mock';
+import { TestE2EModule } from '../module/test.e2e.module';
+import { ErrorUtil } from '../util/error.util';
+
+describe('UserController (e2e with spy)', () => {
+  let app: INestApplication;
+  let repository: Repository<UserEntity>;
+  let request: Request.SuperTest<Request.Test>;
+
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [TestE2EModule],
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe());
+    await app.init();
+
+    request = Request(app.getHttpServer());
+    // Add a repository instance to help us to intercept the database calls.
+    repository = getRepository(UserEntity);
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  describe('POST /users', () => {
+    describe('when save an user', () => {
+      it('should return status code 201 and created user', async () => {
+        jest.spyOn(repository, 'save').mockResolvedValueOnce(UserMock.entity);
+
+        const res = await request.post('/users').send({
+          name: UserMock.dto.name,
+          age: UserMock.dto.age,
+          job: UserMock.dto.job,
+        });
+
+        expect(res.statusCode).toBe(201);
+        expect(res.body).toHaveProperty('name', UserMock.dto.name);
+        expect(res.body).toHaveProperty('age', UserMock.dto.age);
+        expect(res.body).toHaveProperty('job', UserMock.dto.job);
+        return res;
+      });
+    });
+
+    describe('when there are validation errors', () => {
+      it('should return status code 400 and error message for missing fields', async () => {
+        const res = await request.post('/users').send({});
+        expect(res.statusCode).toBe(400);
+        expect(res.body).toHaveProperty('message');
+        expect(res.body.message).toHaveLength(6);
+        expect(res.body).toHaveProperty('error', 'Bad Request');
+        return res;
+      });
+      it('should return status code 400 and error message for invalid fields', async () => {
+        const res = await request.post('/users').send({
+          name: UserMock.dto.name,
+          age: `${UserMock.dto.age}`,
+          job: UserMock.dto.job,
+        });
+        expect(res.statusCode).toBe(400);
+        expect(res.body).toHaveProperty('message');
+        expect(res.body.message).toHaveLength(2);
+        expect(res.body).toHaveProperty('error', 'Bad Request');
+        return res;
+      });
+    });
+
+    describe('when an internal error occurs', () => {
+      it('should return status code 500 and message from internal error', async () => {
+        jest
+          .spyOn(repository, 'save')
+          .mockRejectedValueOnce({ message: 'Sensitive error' });
+
+        const res = await request.post('/users').send({
+          name: UserMock.dto.name,
+          age: UserMock.dto.age,
+          job: UserMock.dto.job,
+        });
+
+        expect(res.statusCode).toBe(500);
+        expect(res.body).toHaveProperty(
+          'message',
+          ErrorUtil.getServiceExceptionMessage('create'),
+        );
+        expect(res.body).toHaveProperty('error', 'Internal Server Error');
+      });
+    });
+  });
+
+  describe('GET /users', () => {
+    describe('when finding a list of users', () => {
+      it('should return status code 200 and a list of users', async () => {
+        jest.spyOn(repository, 'find').mockResolvedValueOnce([UserMock.entity]);
+
+        const res = await request.get(`/users`);
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toBeInstanceOf(Array);
+        expect(res.body).toHaveLength(1);
+      });
+    });
+
+    describe('when there are no users', () => {
+      it('should return status code 200 and an empty list', async () => {
+        jest.spyOn(repository, 'find').mockResolvedValueOnce([]);
+
+        const res = await request.get(`/users`);
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toBeInstanceOf(Array);
+        expect(res.body).toHaveLength(0);
+      });
+    });
+
+    describe('when an internal error occurs', () => {
+      it('should return status code 500 and message from internal error', async () => {
+        jest
+          .spyOn(repository, 'find')
+          .mockRejectedValueOnce({ message: 'Sensitive error' });
+
+        const res = await request.get('/users');
+
+        expect(res.statusCode).toBe(500);
+        expect(res.body).toHaveProperty(
+          'message',
+          ErrorUtil.getServiceExceptionMessage('find'),
+        );
+        expect(res.body).toHaveProperty('error', 'Internal Server Error');
+      });
+    });
+  });
+
+  describe('GET /users/:id', () => {
+    describe('when finding a user by id', () => {
+      it('should return status code 200 and founded user', async () => {
+        // Spying findOne() from checkExists() call on BaseRepository
+        jest
+          .spyOn(repository, 'findOne')
+          .mockResolvedValueOnce(UserMock.entity);
+
+        // Spying findOne() from findById() call on BaseRepository
+        jest
+          .spyOn(repository, 'findOne')
+          .mockResolvedValueOnce(UserMock.entity);
+
+        const res = await request.get(`/users/1`);
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty('name', UserMock.dto.name);
+        expect(res.body).toHaveProperty('age', UserMock.dto.age);
+        expect(res.body).toHaveProperty('job', UserMock.dto.job);
+        return res;
+      });
+    });
+
+    describe('when the user is not founded', () => {
+      it('should return status code 404 and error message for user not founded', async () => {
+        // Spying findOne() from checkExists() call on BaseRepository
+        jest.spyOn(repository, 'findOne').mockResolvedValueOnce(undefined);
+
+        const res = await request.get(`/users/1`);
+        expect(res.statusCode).toBe(404);
+        expect(res.body).toHaveProperty(
+          'message',
+          'User not found or already removed.',
+        );
+        expect(res.body).toHaveProperty('error', 'Not Found');
+        return res;
+      });
+    });
+
+    describe('when an internal error occurs', () => {
+      it('should return status code 500 and message from internal error', async () => {
+        // Spying findOne() from checkExists() call on BaseRepository
+        jest
+          .spyOn(repository, 'findOne')
+          .mockRejectedValueOnce({ message: 'Sensitive error' });
+
+        const res = await request.get(`/users/1`);
+        expect(res.statusCode).toBe(500);
+        expect(res.body).toHaveProperty(
+          'message',
+          ErrorUtil.getServiceExceptionMessage('findById'),
+        );
+        expect(res.body).toHaveProperty('error', 'Internal Server Error');
+      });
+    });
+  });
+
+  describe('PUT /users/:id', () => {
+    const updatedUser = {
+      name: `${UserMock.dto.name} Jr`,
+      age: 18,
+      job: `Junior ${UserMock.dto.job}`,
+    };
+    describe('when updating a user by id', () => {
+      it('should return status code 200 and updated user', async () => {
+        // Spying findOne() from checkExists() call on BaseRepository
+        jest
+          .spyOn(repository, 'findOne')
+          .mockResolvedValueOnce(UserMock.entity);
+
+        // Spying save() from update() call on BaseRepository
+        jest
+          .spyOn(repository, 'save')
+          .mockResolvedValueOnce({ id: 1, ...updatedUser });
+
+        const res = await request.put(`/users/1`).send(updatedUser);
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toHaveProperty('name', updatedUser.name);
+        expect(res.body).toHaveProperty('age', updatedUser.age);
+        expect(res.body).toHaveProperty('job', updatedUser.job);
+        return res;
+      });
+    });
+
+    describe('when the user is not founded', () => {
+      it('should return status code 404 and error message for user not founded', async () => {
+        // Spying findOne() from checkExists() call on BaseRepository
+        jest.spyOn(repository, 'findOne').mockResolvedValueOnce(undefined);
+
+        const res = await request.put(`/users/1`).send(updatedUser);
+        expect(res.statusCode).toBe(404);
+        expect(res.body).toHaveProperty(
+          'message',
+          'User not found or already removed.',
+        );
+        expect(res.body).toHaveProperty('error', 'Not Found');
+        return res;
+      });
+    });
+
+    describe('when there are validation errors', () => {
+      it('should return status code 400 and error message for missing fields', async () => {
+        const res = await request.put('/users/1').send({});
+        expect(res.statusCode).toBe(400);
+        expect(res.body).toHaveProperty('message');
+        expect(res.body.message).toHaveLength(6);
+        expect(res.body).toHaveProperty('error', 'Bad Request');
+        return res;
+      });
+      it('should return status code 400 and error message for invalid fields', async () => {
+        const res = await request.put('/users/1').send({
+          name: updatedUser.name,
+          age: `${updatedUser.age}`,
+          job: updatedUser.job,
+        });
+        expect(res.statusCode).toBe(400);
+        expect(res.body).toHaveProperty('message');
+        expect(res.body.message).toHaveLength(2);
+        expect(res.body).toHaveProperty('error', 'Bad Request');
+        return res;
+      });
+    });
+
+    describe('when an internal error occurs', () => {
+      it('should return status code 500 and message from internal error', async () => {
+        // Spying findOne() from checkExists() call on BaseRepository
+        jest
+          .spyOn(repository, 'findOne')
+          .mockRejectedValueOnce({ message: 'Sensitive error' });
+
+        const res = await request.put(`/users/1`).send(updatedUser);
+        expect(res.statusCode).toBe(500);
+        expect(res.body).toHaveProperty(
+          'message',
+          ErrorUtil.getServiceExceptionMessage('update'),
+        );
+        expect(res.body).toHaveProperty('error', 'Internal Server Error');
+      });
+    });
+  });
+
+  describe('DELETE /users/:id', () => {
+    describe('when deleting a user by id', () => {
+      it('should return status code 204 and no content', async () => {
+        jest
+          .spyOn(repository, 'delete')
+          .mockResolvedValueOnce({ raw: [UserEntity], affected: 1 });
+
+        const res = await request.delete(`/users/1`);
+        expect(res.statusCode).toBe(204);
+        expect(res.body).toMatchObject({});
+        return res;
+      });
+    });
+
+    describe('when the user is not founded', () => {
+      it('should return status code 204 and no content', async () => {
+        jest
+          .spyOn(repository, 'delete')
+          .mockResolvedValueOnce({ raw: [], affected: 0 });
+
+        const res = await request.delete(`/users/1`);
+        expect(res.statusCode).toBe(204);
+        expect(res.body).toMatchObject({});
+        return res;
+      });
+    });
+
+    describe('when an internal error occurs', () => {
+      it('should return status code 500 and message from internal error', async () => {
+        jest
+          .spyOn(repository, 'delete')
+          .mockRejectedValueOnce({ message: 'Sensitive error' });
+
+        const res = await request.delete(`/users/1`);
+        expect(res.statusCode).toBe(500);
+        expect(res.body).toHaveProperty(
+          'message',
+          ErrorUtil.getServiceExceptionMessage('delete'),
+        );
+        expect(res.body).toHaveProperty('error', 'Internal Server Error');
+      });
+    });
+  });
+});
+
+```
+
+E, para concluir, vamos executar nosso último scan. Certifique-se de que o `SonarQube` está rodando na sua máquina
+local. Em seguida, em um terminal na raiz do projeto, execute o comando `sonar-scanner`. O resultado deverá ser como
+esse:
+
+![sonar_scanner_last_scan](images/sonar_scanner_last_scan.png)
+
+O resultado será semelhante ao último scan, pois foram adicionamos novos testes, nenhuma linha de código foi adicionada
+em nosso código fonte. :)
+
+## 4. Conclusão
+
+Deu para perceber que o `SonarQube` é um grande companheiro de desenvolvimento, não é? Ele verifica e te dá o feedback
+de diversas informações relevantes para garantir a qualidade do seu código. Só para `Typescript`, existem cerca de **242
+regras** de qualidade, bad smeels, vulnerabilidades, códigos duplicados, códigos confusos, possíveis bugs, entre outros
+pontos.
+
+Além disso, o `SonarQube` fornece o acompanhamento gráfico da evolução do seu código ao longo do tempo. Para isso, basta
+acessar o bloco `Activity` na página inicial do seu projeto. É possível verificar:
+
+* A evolução do surgimento e resolução dos problemas no código;
+
+![sonar_quality_issues](images/sonar_quality_issues.png)
+
+* A evolução da cobertura dos testes;
+
+![sonar_quality_coverage](images/sonar_quality_coverage.png)
+
+* O surgimento de duplicação de código;
+
+![sonar_quality_duplicate](images/sonar_quality_duplicate.png)
+
+Existem diversos outros indicadores que podem ser validados no dashboard, além dos supracitados. Esse código obviamente
+foi projetado para não "quebrar" no `Sonar`, mas sabemos, que na prática, o desenvolvimento do software nem sempre é
+assim. Sempre temos o que melhorar no nosso código, e usar o `Sonar` é uma ótima solução para a validação do código e
+identificação de possíveis melhorias, aprimorando ainda mais as nossas boas práticas de desenvolvimento.
+
+Obviamente o poder dessa ferramenta vai muito além do que foi mostrado aqui. É possível acompanhar a qualidade dos
+projetos por versão, por branch, enfim. Existe um mundo de possibilidades para o uso dessa ferramenta.
+
+Encorajo você a aderir ao uso dessa poderosa ferramenta no seu dia a dia como desenvolvedor. Comece configurando
+o `SonarQube` para avaliar projetos pessoais que já estão desenvolvidos, e perceba o que pode ser melhorado. Utilizar
+essa ferramenta certamente irá atribuir qualidade e valor ao que você desenvolve, seja em projetos pessoais, freelas ou
+até mesmo nos códigos de trabalho. Happy coding :)

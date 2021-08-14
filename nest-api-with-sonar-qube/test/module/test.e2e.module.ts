@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserModule } from '../../src/ui/module/user.module';
+import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { AppService } from '../../src/business/service/app.service';
+import { UserEntity } from '../../src/infrastructure/entity/user.entity';
 import { AppController } from '../../src/ui/controller/app.controller';
+import { UserModule } from '../../src/ui/module/user.module';
 
 @Module({
   imports: [
@@ -17,6 +19,12 @@ import { AppController } from '../../src/ui/controller/app.controller';
     UserModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: getRepositoryToken(UserEntity),
+      useClass: Repository,
+    },
+  ],
 })
-export class TestModule {}
+export class TestE2EModule {}

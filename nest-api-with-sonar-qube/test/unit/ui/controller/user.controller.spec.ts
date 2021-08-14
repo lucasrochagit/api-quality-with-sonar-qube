@@ -1,8 +1,9 @@
-import { UserDTOMapper } from '../../../../src/ui/mapper/user.dto.mapper';
 import { mock } from 'sinon';
 import { UserController } from '../../../../src/ui/controller/user.controller';
-import { UserMock } from '../../../mock/user.mock';
 import { UserDTO } from '../../../../src/ui/dto/user.dto';
+import { UserDTOMapper } from '../../../../src/ui/mapper/user.dto.mapper';
+import { UserMock } from '../../../mock/user.mock';
+import { ErrorUtil } from '../../../util/error.util';
 
 describe('UserController', () => {
   let userService: any;
@@ -31,8 +32,7 @@ describe('UserController', () => {
       it('should throw the error', async () => {
         userService.create = jest.fn().mockImplementation(() =>
           Promise.reject({
-            message:
-              'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+            message: ErrorUtil.getServiceExceptionMessage('create'),
           }),
         );
         try {
@@ -40,7 +40,7 @@ describe('UserController', () => {
         } catch (err) {
           expect(err).toHaveProperty(
             'message',
-            'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+            ErrorUtil.getServiceExceptionMessage('create'),
           );
         }
       });
@@ -71,8 +71,7 @@ describe('UserController', () => {
       it('should throw the error', async () => {
         userService.find = jest.fn().mockImplementation(() =>
           Promise.reject({
-            message:
-              'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+            message: ErrorUtil.getServiceExceptionMessage('find'),
           }),
         );
         try {
@@ -80,7 +79,7 @@ describe('UserController', () => {
         } catch (err) {
           expect(err).toHaveProperty(
             'message',
-            'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+            ErrorUtil.getServiceExceptionMessage('find'),
           );
         }
       });
@@ -121,8 +120,7 @@ describe('UserController', () => {
       it('should throw the error', async () => {
         userService.findById = jest.fn().mockImplementation(() =>
           Promise.reject({
-            message:
-              'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+            message: ErrorUtil.getServiceExceptionMessage('findById'),
           }),
         );
 
@@ -131,7 +129,7 @@ describe('UserController', () => {
         } catch (err) {
           expect(err).toHaveProperty(
             'message',
-            'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+            ErrorUtil.getServiceExceptionMessage('findById'),
           );
         }
       });
@@ -175,8 +173,7 @@ describe('UserController', () => {
       it('should throw the error', async () => {
         userService.update = jest.fn().mockImplementation(() =>
           Promise.reject({
-            message:
-              'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+            message: ErrorUtil.getServiceExceptionMessage('update'),
           }),
         );
 
@@ -185,7 +182,7 @@ describe('UserController', () => {
         } catch (err) {
           expect(err).toHaveProperty(
             'message',
-            'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+            ErrorUtil.getServiceExceptionMessage('update'),
           );
         }
       });
@@ -206,8 +203,7 @@ describe('UserController', () => {
       it('should throw the error', async () => {
         userService.delete = jest.fn().mockImplementation(() =>
           Promise.reject({
-            message:
-              'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+            message: ErrorUtil.getServiceExceptionMessage('delete'),
           }),
         );
         try {
@@ -215,7 +211,7 @@ describe('UserController', () => {
         } catch (err) {
           expect(err).toHaveProperty(
             'message',
-            'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+            ErrorUtil.getServiceExceptionMessage('delete'),
           );
         }
       });

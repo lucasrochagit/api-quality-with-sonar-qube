@@ -1,10 +1,7 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserEntity } from '../../infrastructure/entity/user.entity';
 import { UserRepository } from '../../infrastructure/repository/user.repository';
+import { ServiceErrorException } from '../exception/service.error.exception';
 import { UserModelMapper } from '../mapper/user.model.mapper';
 import { UserModel } from '../model/user.model';
 import { IUserService } from './interface/user.service.interface';
@@ -22,7 +19,7 @@ export class UserService implements IUserService {
       const result: UserEntity = await this._repository.create(entity);
       return this._mapper.serialize(result);
     } catch (err) {
-      throw this.getInternalServerErrorException();
+      throw new ServiceErrorException('create');
     }
   }
 
@@ -31,7 +28,7 @@ export class UserService implements IUserService {
       const result: UserEntity[] = await this._repository.find();
       return result.map((item: UserEntity) => this._mapper.serialize(item));
     } catch (err) {
-      throw this.getInternalServerErrorException();
+      throw new ServiceErrorException('find');
     }
   }
 
@@ -44,7 +41,7 @@ export class UserService implements IUserService {
       if (err instanceof NotFoundException) {
         throw err;
       }
-      throw this.getInternalServerErrorException();
+      throw new ServiceErrorException('findById');
     }
   }
 
@@ -58,7 +55,7 @@ export class UserService implements IUserService {
       if (err instanceof NotFoundException) {
         throw err;
       }
-      throw this.getInternalServerErrorException();
+      throw new ServiceErrorException('update');
     }
   }
 
@@ -66,7 +63,7 @@ export class UserService implements IUserService {
     try {
       await this._repository.delete(id);
     } catch (err) {
-      throw this.getInternalServerErrorException();
+      throw new ServiceErrorException('delete');
     }
   }
 
@@ -75,11 +72,5 @@ export class UserService implements IUserService {
     if (!exists) {
       throw new NotFoundException('User not found or already removed.');
     }
-  }
-
-  private getInternalServerErrorException(): InternalServerErrorException {
-    return new InternalServerErrorException(
-      'Due to an internal error, the operation could not be performed at this time. Please try again later.',
-    );
   }
 }

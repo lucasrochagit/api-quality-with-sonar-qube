@@ -3,6 +3,7 @@ import { UserModelMapper } from '../../../../src/business/mapper/user.model.mapp
 import { UserModel } from '../../../../src/business/model/user.model';
 import { UserService } from '../../../../src/business/service/user.service';
 import { UserMock } from '../../../mock/user.mock';
+import { ErrorUtil } from '../../../util/error.util';
 
 describe('UserService', () => {
   let userRepository: any;
@@ -39,7 +40,7 @@ describe('UserService', () => {
         } catch (err) {
           expect(err).toHaveProperty(
             'message',
-            'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+            ErrorUtil.getServiceExceptionMessage('create'),
           );
         }
       });
@@ -78,7 +79,7 @@ describe('UserService', () => {
         } catch (err) {
           expect(err).toHaveProperty(
             'message',
-            'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+            ErrorUtil.getServiceExceptionMessage('find'),
           );
         }
       });
@@ -129,7 +130,7 @@ describe('UserService', () => {
         } catch (err) {
           expect(err).toHaveProperty(
             'message',
-            'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+            ErrorUtil.getServiceExceptionMessage('findById'),
           );
         }
       });
@@ -183,7 +184,7 @@ describe('UserService', () => {
         } catch (err) {
           expect(err).toHaveProperty(
             'message',
-            'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+            ErrorUtil.getServiceExceptionMessage('update'),
           );
         }
       });
@@ -212,7 +213,7 @@ describe('UserService', () => {
         } catch (err) {
           expect(err).toHaveProperty(
             'message',
-            'Due to an internal error, the operation could not be performed at this time. Please try again later.',
+            ErrorUtil.getServiceExceptionMessage('delete'),
           );
         }
       });

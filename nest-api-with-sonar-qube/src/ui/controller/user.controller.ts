@@ -36,7 +36,7 @@ export class UserController {
 
   @Get(':id')
   async findById(@Param('id') id: number): Promise<UserDTO> {
-    const result: UserModel = await this._service.findById(id);
+    const result: UserModel = await this._service.findById(+id);
     return this._mapper.serialize(result);
   }
 
@@ -46,7 +46,7 @@ export class UserController {
     @Body() userDTO: UserDTO,
   ): Promise<UserDTO> {
     const model: UserModel = this._mapper.deserialize(userDTO);
-    const result: UserModel = await this._service.update(id, model);
+    const result: UserModel = await this._service.update(+id, model);
     return this._mapper.serialize(result);
   }
 
